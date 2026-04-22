@@ -11,10 +11,7 @@ import {
 } from "firebase/firestore";
 
 import { db, isFirebaseConfigured, shouldUseLocalFallback, uploadImage } from "@/lib/firebase";
-import { sampleProducts } from "@/lib/sample-data";
 import type { Product } from "@/lib/types";
-
-const STORAGE_KEY = "fierostore.products";
 
 function generateId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -28,26 +25,6 @@ function buildSlug(title: string) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-function getLocalProducts() {
-  if (typeof window === "undefined") {
-    return sampleProducts;
-  }
-
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return sampleProducts;
-
-  try {
-    return JSON.parse(raw) as Product[];
-  } catch {
-    return sampleProducts;
-  }
-}
-
-function setLocalProducts(products: Product[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 }
 
 function normalizeProduct(
@@ -82,7 +59,7 @@ function normalizeProduct(
 
 export async function getProducts() {
   if (!isFirebaseConfigured || !db) {
-    return getLocalProducts().sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    return [];
   }
 
   try {
@@ -90,7 +67,7 @@ export async function getProducts() {
     return snapshot.docs.map((entry) => normalizeProduct(entry.id, entry.data() as Product));
   } catch (error) {
     if (shouldUseLocalFallback(error)) {
-      return getLocalProducts().sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      return [];
     }
 
     throw error;
@@ -119,38 +96,20 @@ export async function createProduct(input: Omit<Product, "id" | "slug" | "create
   };
 
   if (!isFirebaseConfigured || !db) {
-    const products = [product, ...getLocalProducts()];
-    setLocalProducts(products);
-    return product;
+    throw new Error("Firebase is not configured.");
   }
 
   try {
     const created = await addDoc(collection(db, "products"), product);
     return { ...product, id: created.id };
   } catch (error) {
-    if (shouldUseLocalFallback(error)) {
-      const products = [product, ...getLocalProducts()];
-      setLocalProducts(products);
-      return product;
-    }
-
     throw error;
   }
 }
 
 export async function updateProduct(productId: string, updates: Partial<Product>) {
   if (!isFirebaseConfigured || !db) {
-    const products = getLocalProducts().map((product) =>
-      product.id === productId
-        ? {
-            ...product,
-            ...updates,
-            slug: updates.title ? buildSlug(updates.title) : product.slug
-          }
-        : product
-    );
-    setLocalProducts(products);
-    return products.find((product) => product.id === productId) ?? null;
+    throw new Error("Firebase is not configured.");
   }
 
   try {
@@ -159,38 +118,18 @@ export async function updateProduct(productId: string, updates: Partial<Product>
     const updated = await getDoc(docRef);
     return updated.exists() ? normalizeProduct(updated.id, updated.data() as Product) : null;
   } catch (error) {
-    if (shouldUseLocalFallback(error)) {
-      const products = getLocalProducts().map((product) =>
-        product.id === productId
-          ? {
-              ...product,
-              ...updates,
-              slug: updates.title ? buildSlug(updates.title) : product.slug
-            }
-          : product
-      );
-      setLocalProducts(products);
-      return products.find((product) => product.id === productId) ?? null;
-    }
-
     throw error;
   }
 }
 
 export async function deleteProduct(productId: string) {
   if (!isFirebaseConfigured || !db) {
-    setLocalProducts(getLocalProducts().filter((product) => product.id !== productId));
-    return;
+    throw new Error("Firebase is not configured.");
   }
 
   try {
     await deleteDoc(doc(db, "products", productId));
   } catch (error) {
-    if (shouldUseLocalFallback(error)) {
-      setLocalProducts(getLocalProducts().filter((product) => product.id !== productId));
-      return;
-    }
-
     throw error;
   }
 }

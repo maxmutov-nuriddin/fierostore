@@ -1,34 +1,11 @@
 import { addDoc, collection, getDocs, orderBy, query, where } from "firebase/firestore";
 
 import { db, isFirebaseConfigured, shouldUseLocalFallback } from "@/lib/firebase";
-import { sampleReviews } from "@/lib/sample-data";
 import type { Review } from "@/lib/types";
-
-const STORAGE_KEY = "fierostore.reviews";
-
-function getLocalReviews() {
-  if (typeof window === "undefined") {
-    return sampleReviews;
-  }
-
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return sampleReviews;
-
-  try {
-    return JSON.parse(raw) as Review[];
-  } catch {
-    return sampleReviews;
-  }
-}
-
-function setLocalReviews(reviews: Review[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
-}
 
 export async function getReviewsByProduct(productId: string) {
   if (!isFirebaseConfigured || !db) {
-    return getLocalReviews().filter((review) => review.productId === productId);
+    return [];
   }
 
   try {
@@ -43,7 +20,7 @@ export async function getReviewsByProduct(productId: string) {
     }));
   } catch (error) {
     if (shouldUseLocalFallback(error)) {
-      return getLocalReviews().filter((review) => review.productId === productId);
+      return [];
     }
 
     throw error;
@@ -61,19 +38,13 @@ export async function addReview(input: Omit<Review, "id" | "createdAt">) {
   };
 
   if (!isFirebaseConfigured || !db) {
-    setLocalReviews([review, ...getLocalReviews()]);
-    return review;
+    throw new Error("Firebase is not configured.");
   }
 
   try {
     const created = await addDoc(collection(db, "reviews"), review);
     return { ...review, id: created.id };
   } catch (error) {
-    if (shouldUseLocalFallback(error)) {
-      setLocalReviews([review, ...getLocalReviews()]);
-      return review;
-    }
-
     throw error;
   }
 }

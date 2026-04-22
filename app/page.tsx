@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
@@ -9,18 +10,50 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductGrid } from "@/components/ProductGrid";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Button } from "@/components/Button";
-import { categoryLabels, sampleProducts } from "@/lib/sample-data";
-
-const categoryImages = {
-  "T-shirts": sampleProducts[0].images[0],
-  Sets: sampleProducts[1].images[0],
-  Pants: sampleProducts[2].images[0],
-  Jackets: sampleProducts[3].images[0]
-};
+import { SkeletonBlock } from "@/components/SkeletonBlock";
+import { getProducts } from "@/lib/product-service";
+import type { Product } from "@/lib/types";
 
 export default function HomePage() {
-  const featuredProducts = sampleProducts.filter((product) => product.featured).slice(0, 4);
-  const newDropProducts = sampleProducts.filter((product) => product.isNewDrop).slice(0, 4);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      setIsLoading(true);
+
+      try {
+        const entries = await getProducts();
+        if (active) {
+          setProducts(entries);
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const categories = useMemo(
+    () =>
+      Array.from(new Set(products.map((product) => product.category))).map((category) => ({
+        category,
+        image: products.find((product) => product.category === category)?.images[0] ?? ""
+      })),
+    [products]
+  );
+
+  const featuredProducts = products.filter((product) => product.featured).slice(0, 4);
+  const newDropProducts = products.filter((product) => product.isNewDrop).slice(0, 4);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
@@ -34,7 +67,13 @@ export default function HomePage() {
         />
 
         <div className="mt-8 flex snap-x gap-4 overflow-x-auto pb-2">
-          {categoryLabels.map((category) => (
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="min-w-[78vw] sm:min-w-[320px] lg:min-w-[360px]">
+                  <SkeletonBlock className="aspect-[4/5] w-full rounded-[2.2rem]" />
+                </div>
+              ))
+            : categories.map(({ category, image }) => (
             <motion.div
               key={category}
               whileInView={{ opacity: 1, y: 0 }}
@@ -44,13 +83,17 @@ export default function HomePage() {
             >
               <Link href={`/shop?category=${encodeURIComponent(category)}`} className="block">
                 <article className="relative aspect-[4/5] overflow-hidden rounded-[2.2rem]">
-                  <Image
-                    src={categoryImages[category]}
-                    alt={category}
-                    fill
-                    sizes="(max-width: 768px) 78vw, 360px"
-                    className="object-cover transition duration-700 hover:scale-105"
-                  />
+                  {image ? (
+                    <Image
+                      src={image}
+                      alt={category}
+                      fill
+                      sizes="(max-width: 768px) 78vw, 360px"
+                      className="object-cover transition duration-700 hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-zinc-200" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                   <div className="absolute inset-x-6 bottom-6">
                     <p className="text-xs uppercase tracking-[0.35em] text-white/70">Category</p>
@@ -82,7 +125,26 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="mt-8">
-          <ProductGrid products={featuredProducts} />
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="space-y-3">
+                  <SkeletonBlock className="aspect-[4/5] w-full rounded-[2rem]" />
+                  <SkeletonBlock className="h-4 w-2/3" />
+                  <SkeletonBlock className="h-4 w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : featuredProducts.length ? (
+            <ProductGrid products={featuredProducts} />
+          ) : (
+            <div className="rounded-[2.4rem] border border-dashed border-black/10 px-6 py-16 text-center">
+              <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">No featured products</p>
+              <p className="mt-4 text-base leading-7 text-zinc-600">
+                Mark products as featured in the admin panel to show them here.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -126,7 +188,26 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="mt-8">
-          <ProductGrid products={newDropProducts} />
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="space-y-3">
+                  <SkeletonBlock className="aspect-[4/5] w-full rounded-[2rem]" />
+                  <SkeletonBlock className="h-4 w-2/3" />
+                  <SkeletonBlock className="h-4 w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : newDropProducts.length ? (
+            <ProductGrid products={newDropProducts} />
+          ) : (
+            <div className="rounded-[2.4rem] border border-dashed border-black/10 px-6 py-16 text-center">
+              <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">No new drop yet</p>
+              <p className="mt-4 text-base leading-7 text-zinc-600">
+                Upload new products in the admin panel and mark them as a new drop.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>

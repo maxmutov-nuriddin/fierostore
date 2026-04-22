@@ -9,7 +9,6 @@ import { ProductGrid } from "@/components/ProductGrid";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Button } from "@/components/Button";
 import { SkeletonBlock } from "@/components/SkeletonBlock";
-import { categoryLabels } from "@/lib/sample-data";
 import { getProducts } from "@/lib/product-service";
 import type { Product, ProductFilters } from "@/lib/types";
 
@@ -25,9 +24,13 @@ export function ShopPageView() {
   const searchParams = useSearchParams();
   const categoryFromQuery = searchParams.get("category");
   const [products, setProducts] = useState<Product[]>([]);
+  const categories = useMemo(
+    () => Array.from(new Set(products.map((product) => product.category))),
+    [products]
+  );
   const [filters, setFilters] = useState<ProductFilters>({
     ...initialFilters,
-    category: categoryFromQuery && categoryLabels.includes(categoryFromQuery as never) ? categoryFromQuery : "All"
+    category: categoryFromQuery ?? "All"
   });
   const [visibleCount, setVisibleCount] = useState(8);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +38,7 @@ export function ShopPageView() {
   useEffect(() => {
     setFilters((current) => ({
       ...current,
-      category: categoryFromQuery && categoryLabels.includes(categoryFromQuery as never) ? categoryFromQuery : "All"
+      category: categoryFromQuery ?? "All"
     }));
   }, [categoryFromQuery]);
 
@@ -109,7 +112,7 @@ export function ShopPageView() {
       </section>
 
       <div className="mt-8 flex snap-x gap-3 overflow-x-auto pb-2">
-        {["All", ...categoryLabels].map((category) => {
+        {["All", ...categories].map((category) => {
           const active = filters.category === category;
 
           return (
@@ -151,7 +154,16 @@ export function ShopPageView() {
             </div>
           ) : (
             <>
-              <ProductGrid products={visibleProducts} />
+              {visibleProducts.length ? (
+                <ProductGrid products={visibleProducts} />
+              ) : (
+                <div className="rounded-[2.4rem] border border-dashed border-black/10 px-6 py-16 text-center">
+                  <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">No products yet</p>
+                  <p className="mt-4 text-base leading-7 text-zinc-600">
+                    Add products from the admin panel and they will appear here from Firestore.
+                  </p>
+                </div>
+              )}
 
               {visibleProducts.length < filteredProducts.length ? (
                 <motion.div
