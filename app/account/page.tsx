@@ -96,39 +96,39 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
       <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
-        <section className="lg:sticky lg:top-28">
-          <div className="relative overflow-hidden rounded-[2.8rem] border border-black/5 bg-[#111111] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.14)] sm:p-8">
+        <section>
+          <div className="relative overflow-hidden rounded-[2.8rem] border border-black/5 bg-[#111111] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.14)] sm:p-7">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_24%)]" />
             <div className="pointer-events-none absolute -right-10 top-10 font-serif text-[8rem] leading-none text-white/4 sm:text-[11rem]">
               FI
             </div>
 
-            <div className="relative flex min-h-[620px] flex-col justify-between">
+            <div className="relative flex flex-col gap-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.42em] text-white/45">FIERO</p>
-                  <p className="mt-3 text-[11px] uppercase tracking-[0.3em] text-white/32">Private customer access</p>
+                  <p className="mt-2 text-[11px] uppercase tracking-[0.3em] text-white/32">Private customer access</p>
                 </div>
                 <div className="rounded-full border border-white/10 px-4 py-2 text-[11px] uppercase tracking-[0.28em] text-white/50">
                   Members
                 </div>
               </div>
 
-              <div className="mt-12">
+              <div className="mt-5">
                 <p className="text-[11px] uppercase tracking-[0.34em] text-white/36">Account</p>
-                <h1 className="mt-6 max-w-xl font-serif text-5xl leading-[0.94] text-white sm:text-6xl xl:text-[4.4rem]">
+                <h1 className="mt-5 max-w-lg font-serif text-[3.3rem] leading-[0.94] text-white sm:text-[3.9rem] xl:text-[4rem]">
                   A quieter way
                   <br />
                   to save pieces
                   <br />
                   and check out faster.
                 </h1>
-                <p className="mt-7 max-w-lg text-base leading-8 text-white/62 sm:text-lg">
+                <p className="mt-5 max-w-md text-[15px] leading-7 text-white/62">
                   Create one customer profile to keep favorites, place orders, and return without starting from zero.
                 </p>
               </div>
 
-              <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-3">
+              <div className="mt-2 grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
                 {[
                   ["01", "Wishlist", "Saved products stay attached to your profile."],
                   ["02", "Orders", "Checkout details stay ready for faster repeat purchases."],
@@ -136,26 +136,26 @@ export default function AccountPage() {
                 ].map(([index, title, copy]) => (
                   <div
                     key={title}
-                    className="rounded-[1.8rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:min-h-[220px] xl:min-h-0 2xl:min-h-[220px]"
+                    className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3.5 backdrop-blur"
                   >
                     <p className="text-[11px] uppercase tracking-[0.34em] text-white/30">{index}</p>
-                    <p className="mt-6 text-xs uppercase tracking-[0.28em] text-white/52">{title}</p>
-                    <p className="mt-3 max-w-[26ch] text-base leading-8 text-white/62 sm:max-w-none 2xl:max-w-[18ch]">
+                    <p className="mt-3 text-[11px] uppercase tracking-[0.28em] text-white/52">{title}</p>
+                    <p className="mt-2.5 text-[15px] leading-7 text-white/62">
                       {copy}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-10 border-t border-white/10 pt-6">
+              <div className="mt-2 border-t border-white/10 pt-4">
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <p className="font-serif text-4xl leading-none text-white sm:text-5xl">FIERO</p>
-                    <p className="mt-3 text-[11px] uppercase tracking-[0.34em] text-white/34">
+                    <p className="font-serif text-[2.8rem] leading-none text-white sm:text-[3.15rem]">FIERO</p>
+                    <p className="mt-2 text-[11px] uppercase tracking-[0.34em] text-white/34">
                       Fashion storefront membership
                     </p>
                   </div>
-                  <p className="max-w-[170px] text-right text-sm leading-6 text-white/42">
+                  <p className="max-w-[150px] text-right text-[13px] leading-6 text-white/42">
                     Built for wishlist, faster checkout, and cleaner order handling.
                   </p>
                 </div>
