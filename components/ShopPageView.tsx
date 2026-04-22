@@ -25,6 +25,7 @@ export function ShopPageView() {
   const searchParams = useSearchParams();
   const categoryFromQuery = searchParams.get("category");
   const [products, setProducts] = useState<Product[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
   const categories = useMemo(
     () => Array.from(new Set(products.map((product) => product.category))),
     [products]
@@ -47,7 +48,15 @@ export function ShopPageView() {
       setIsLoading(true);
       try {
         const entries = await getProducts();
-        if (active) setProducts(entries);
+        if (active) {
+          setProducts(entries);
+          setErrorMessage("");
+        }
+      } catch (error) {
+        if (active) {
+          setProducts([]);
+          setErrorMessage(error instanceof Error ? error.message : "Products could not be loaded.");
+        }
       } finally {
         if (active) setIsLoading(false);
       }
@@ -145,6 +154,12 @@ export function ShopPageView() {
             </div>
             <p className="text-sm text-zinc-500">Hover on desktop to swap images and quick-add</p>
           </div>
+
+          {!isLoading && errorMessage ? (
+            <div className="mb-5 rounded-[1.8rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+              {errorMessage}
+            </div>
+          ) : null}
 
           {isLoading ? (
             <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">

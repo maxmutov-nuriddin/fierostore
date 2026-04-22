@@ -27,11 +27,22 @@ function readStoredWishlist() {
 export const WishlistContext = createContext<WishlistContextValue | null>(null);
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [ids, setIds] = useState<string[]>(() => readStoredWishlist());
+  const [ids, setIds] = useState<string[]>([]);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setIds(readStoredWishlist());
+      setHasHydrated(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  }, [ids]);
+  }, [hasHydrated, ids]);
 
   const value = useMemo<WishlistContextValue>(
     () => ({

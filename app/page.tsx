@@ -17,6 +17,7 @@ import type { Product } from "@/lib/types";
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -28,6 +29,12 @@ export default function HomePage() {
         const entries = await getProducts();
         if (active) {
           setProducts(entries);
+          setErrorMessage("");
+        }
+      } catch (error) {
+        if (active) {
+          setProducts([]);
+          setErrorMessage(error instanceof Error ? error.message : "Products could not be loaded.");
         }
       } finally {
         if (active) {
@@ -65,6 +72,12 @@ export default function HomePage() {
           title="Swipe the wardrobe by silhouette."
           description="A fast mobile-first category rail with strong editorial framing and instant intent."
         />
+
+        {!isLoading && errorMessage ? (
+          <div className="mt-6 rounded-[1.8rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+            {errorMessage}
+          </div>
+        ) : null}
 
         <div className="mt-8 flex snap-x gap-4 overflow-x-auto pb-2">
           {isLoading

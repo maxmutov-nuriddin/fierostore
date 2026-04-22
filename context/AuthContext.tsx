@@ -32,10 +32,9 @@ type AuthContextValue = {
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const initialState = readLocalAuthState();
-  const [user, setUser] = useState<AppUser | null>(initialState.user);
-  const [profile, setProfile] = useState<CustomerProfile | null>(initialState.profile);
-  const [isAdmin, setIsAdmin] = useState(initialState.isAdmin);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [profile, setProfile] = useState<CustomerProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

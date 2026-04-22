@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "http://localhost:5000/api";
+const DEFAULT_API_URL = "http://localhost:5051/api";
 const AUTH_TOKEN_STORAGE_KEY = "fierostore.auth-token";
 
 function trimTrailingSlash(value: string) {
@@ -74,14 +74,20 @@ export async function apiRequest<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    method: options.method ?? "GET",
-    headers,
-    body:
-      !options.body || isFormData || typeof options.body === "string"
-        ? (options.body as BodyInit | null | undefined)
-        : JSON.stringify(options.body)
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${getApiBaseUrl()}${path}`, {
+      method: options.method ?? "GET",
+      headers,
+      body:
+        !options.body || isFormData || typeof options.body === "string"
+          ? (options.body as BodyInit | null | undefined)
+          : JSON.stringify(options.body)
+    });
+  } catch {
+    throw new Error("Backendga ulanib bo'lmadi. `fierostoreBackend` serveri ishga tushganini tekshiring.");
+  }
 
   return parseResponse<T>(response);
 }

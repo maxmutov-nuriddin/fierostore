@@ -31,6 +31,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const { isAuthenticated } = useAuth();
   const { addItem } = useCart();
@@ -38,8 +39,13 @@ export function ProductDetailPage({ productId }: { productId: string }) {
   const { toggle, isSaved } = useWishlist();
 
   const loadReviews = async (currentId: string) => {
-    const items = await getReviewsByProduct(currentId);
-    setReviews(items);
+    try {
+      const items = await getReviewsByProduct(currentId);
+      setReviews(items);
+    } catch (error) {
+      setReviews([]);
+      setErrorMessage(error instanceof Error ? error.message : "Reviews could not be loaded.");
+    }
   };
 
   useEffect(() => {
@@ -57,11 +63,18 @@ export function ProductDetailPage({ productId }: { productId: string }) {
 
         setProduct(productEntry);
         setRelated(relatedEntries);
+        setErrorMessage("");
         if (productEntry) {
           setSelectedSize(productEntry.sizes[0] ?? null);
           setSelectedColor(productEntry.colors[0] ?? null);
           await loadReviews(productEntry.id);
         }
+      } catch (error) {
+        if (!active) return;
+        setProduct(null);
+        setRelated([]);
+        setReviews([]);
+        setErrorMessage(error instanceof Error ? error.message : "Product could not be loaded.");
       } finally {
         if (active) setIsLoading(false);
       }
@@ -106,8 +119,13 @@ export function ProductDetailPage({ productId }: { productId: string }) {
   if (!product) {
     return (
       <div className="mx-auto flex min-h-[60svh] max-w-3xl flex-col items-center justify-center px-4 text-center">
-        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">Missing product</p>
-        <h1 className="mt-4 font-serif text-5xl text-black">This piece is currently unavailable.</h1>
+        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
+          {errorMessage ? "Connection issue" : "Missing product"}
+        </p>
+        <h1 className="mt-4 font-serif text-5xl text-black">
+          {errorMessage ? "Product data is temporarily unavailable." : "This piece is currently unavailable."}
+        </h1>
+        {errorMessage ? <p className="mt-4 max-w-xl text-base leading-7 text-zinc-600">{errorMessage}</p> : null}
         <Link href="/shop" className="mt-8">
           <Button>Back to shop</Button>
         </Link>
