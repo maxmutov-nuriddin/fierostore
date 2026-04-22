@@ -28,3 +28,18 @@ export function slugToTitle(value: string) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+export function shouldBypassImageOptimization(src: string) {
+  if (!src) return false;
+
+  if (src.startsWith("/uploads/")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(src);
+    return [url.hostname, url.port].join(":") === "localhost:5051" || [url.hostname, url.port].join(":") === "127.0.0.1:5051";
+  } catch {
+    return false;
+  }
+}

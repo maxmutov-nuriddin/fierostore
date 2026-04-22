@@ -20,7 +20,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { getProductById, getRelatedProducts } from "@/lib/product-service";
 import { getReviewsByProduct } from "@/lib/review-service";
 import type { Product, ProductSize, Review } from "@/lib/types";
-import { averageRating, formatCurrency } from "@/lib/utils";
+import { averageRating, formatCurrency, shouldBypassImageOptimization } from "@/lib/utils";
 
 export function ProductDetailPage({ productId }: { productId: string }) {
   const router = useRouter();
@@ -155,6 +155,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
                   fill
                   sizes="(max-width: 1024px) 82vw, 40vw"
                   className="object-cover"
+                  unoptimized={shouldBypassImageOptimization(image)}
                 />
               </button>
             ))}

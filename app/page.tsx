@@ -13,6 +13,7 @@ import { Button } from "@/components/Button";
 import { SkeletonBlock } from "@/components/SkeletonBlock";
 import { getProducts } from "@/lib/product-service";
 import type { Product } from "@/lib/types";
+import { shouldBypassImageOptimization } from "@/lib/utils";
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -103,6 +104,7 @@ export default function HomePage() {
                       fill
                       sizes="(max-width: 768px) 78vw, 360px"
                       className="object-cover transition duration-700 hover:scale-105"
+                      unoptimized={shouldBypassImageOptimization(image)}
                     />
                   ) : (
                     <div className="absolute inset-0 bg-zinc-200" />

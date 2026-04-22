@@ -13,7 +13,7 @@ import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/useToast";
 import { useWishlist } from "@/hooks/useWishlist";
 import type { Product } from "@/lib/types";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, shouldBypassImageOptimization } from "@/lib/utils";
 
 export function ProductCard({ product }: { product: Product }) {
   const router = useRouter();
@@ -24,6 +24,7 @@ export function ProductCard({ product }: { product: Product }) {
   const { pushToast } = useToast();
 
   const saved = isSaved(product.id);
+  const cardImage = hovered ? product.images[1] ?? product.images[0] : product.images[0];
 
   return (
     <motion.article
@@ -39,13 +40,18 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="relative overflow-hidden rounded-[2rem] bg-zinc-200">
         <Link href={`/product/${product.id}`} className="block">
           <div className="relative aspect-[4/5] overflow-hidden">
-            <Image
-              src={hovered ? product.images[1] ?? product.images[0] : product.images[0]}
-              alt={product.title}
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-              className="object-cover transition duration-700 group-hover:scale-[1.03]"
-            />
+            {cardImage ? (
+              <Image
+                src={cardImage}
+                alt={product.title}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                className="object-cover transition duration-700 group-hover:scale-[1.03]"
+                unoptimized={shouldBypassImageOptimization(cardImage)}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-zinc-200" />
+            )}
           </div>
         </Link>
 

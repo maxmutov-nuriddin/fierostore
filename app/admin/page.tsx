@@ -371,6 +371,10 @@ export default function AdminPage() {
             />
             <div className="grid gap-4 sm:grid-cols-2">
               <input
+                type="number"
+                min="0"
+                max="5"
+                step="0.1"
                 value={form.rating}
                 onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))}
                 placeholder="Rating"

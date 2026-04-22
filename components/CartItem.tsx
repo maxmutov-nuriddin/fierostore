@@ -5,7 +5,7 @@ import { Minus, Plus, X } from "lucide-react";
 
 import { useCart } from "@/hooks/useCart";
 import type { CartLine } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, shouldBypassImageOptimization } from "@/lib/utils";
 
 export function CartItem({ item }: { item: CartLine }) {
   const { updateQuantity, removeItem } = useCart();
@@ -13,7 +13,16 @@ export function CartItem({ item }: { item: CartLine }) {
   return (
     <article className="grid grid-cols-[96px_1fr] gap-4 rounded-[2rem] border border-black/5 bg-white/80 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.04)] backdrop-blur sm:grid-cols-[120px_1fr]">
       <div className="relative aspect-square overflow-hidden rounded-[1.5rem] bg-zinc-200">
-        <Image src={item.image} alt={item.title} fill sizes="140px" className="object-cover" />
+        {item.image ? (
+          <Image
+            src={item.image}
+            alt={item.title}
+            fill
+            sizes="140px"
+            className="object-cover"
+            unoptimized={shouldBypassImageOptimization(item.image)}
+          />
+        ) : null}
       </div>
 
       <div className="flex min-w-0 flex-col justify-between gap-4">
