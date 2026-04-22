@@ -22,7 +22,7 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: "FIERO Store",
-  description: "Premium editorial e-commerce storefront built with Next.js and Firebase."
+  description: "Premium editorial e-commerce storefront built with Next.js, Node.js, and MongoDB."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

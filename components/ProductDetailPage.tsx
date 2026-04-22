@@ -260,7 +260,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
           <SectionHeading
             eyebrow="Reviews"
             title="What customers say after delivery."
-            description="Minimal feedback system powered by Firestore and linked to the product record."
+            description="Minimal feedback system powered by the Node and Mongo review service."
           />
         </div>
         <div className="space-y-5">

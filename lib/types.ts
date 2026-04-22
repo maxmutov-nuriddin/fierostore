@@ -1,5 +1,13 @@
 export type ProductSize = "S" | "M" | "L" | "XL";
 
+export type AppUserRole = "customer" | "admin";
+
+export type AppUser = {
+  id: string;
+  email: string;
+  role: AppUserRole;
+};
+
 export type Product = {
   id: string;
   title: string;
@@ -9,11 +17,15 @@ export type Product = {
   sizes: ProductSize[];
   colors: string[];
   description: string;
-  category: "T-shirts" | "Sets" | "Pants" | "Jackets";
+  category: string;
+  cardType: string;
+  tags: string[];
   featured?: boolean;
   isNewDrop?: boolean;
   rating?: number;
+  sortPriority?: number;
   createdAt: string;
+  updatedAt?: string;
 };
 
 export type CartLine = {
@@ -54,6 +66,7 @@ export type ProductFilters = {
   priceRange: [number, number];
   sort: "newest" | "price-low" | "price-high";
   category: string;
+  cardType: string;
 };
 
 export type ToastTone = "success" | "error" | "info";
@@ -71,5 +84,7 @@ export type CustomerProfile = {
   lastName: string;
   phone: string;
   email: string;
+  role?: AppUserRole;
   createdAt: string;
+  lastLoginAt?: string | null;
 };

@@ -16,21 +16,24 @@ type CartContextValue = {
 
 const STORAGE_KEY = "fierostore.cart";
 
+function readStoredCart() {
+  if (typeof window === "undefined") return [];
+
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (!raw) return [];
+
+  try {
+    return JSON.parse(raw) as CartLine[];
+  } catch {
+    window.localStorage.removeItem(STORAGE_KEY);
+    return [];
+  }
+}
+
 export const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartLine[]>([]);
-
-  useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-
-    try {
-      setItems(JSON.parse(raw) as CartLine[]);
-    } catch {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
-  }, []);
+  const [items, setItems] = useState<CartLine[]>(() => readStoredCart());
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));

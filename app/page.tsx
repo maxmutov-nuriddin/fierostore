@@ -165,7 +165,7 @@ export default function HomePage() {
               "Mobile-first layout",
               "Sticky add to cart",
               "Skeleton loading",
-              "Firebase admin flow"
+              "Node and Mongo admin flow"
             ].map((feature) => (
               <div key={feature} className="rounded-[1.8rem] border border-white/10 bg-white/5 p-5 backdrop-blur">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/50">Feature</p>

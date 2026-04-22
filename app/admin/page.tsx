@@ -7,7 +7,6 @@ import { Button } from "@/components/Button";
 import { SectionHeading } from "@/components/SectionHeading";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
-import { signInAdmin } from "@/lib/firebase";
 import {
   createProduct,
   deleteProduct,
@@ -23,29 +22,35 @@ type ProductForm = {
   title: string;
   price: string;
   category: Product["category"];
+  cardType: string;
   description: string;
   sizes: string;
   colors: string;
+  tags: string;
   featured: boolean;
   isNewDrop: boolean;
   rating: string;
+  sortPriority: string;
 };
 
 const initialForm: ProductForm = {
   title: "",
   price: "",
   category: "T-shirts",
+  cardType: "standard",
   description: "",
   sizes: "S,M,L,XL",
   colors: "#111111,#e7e5e4",
+  tags: "new,signature",
   featured: false,
   isNewDrop: true,
-  rating: "4.8"
+  rating: "4.8",
+  sortPriority: "0"
 };
 
 export default function AdminPage() {
   const router = useRouter();
-  const { isAdmin, isAuthenticated, isLoading, logout } = useAuth();
+  const { isAdmin, isAuthenticated, isLoading, loginAdmin, logout } = useAuth();
   const { pushToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -53,7 +58,7 @@ export default function AdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [isBooting, setIsBooting] = useState(true);
+  const [hasLoadedAdminData, setHasLoadedAdminData] = useState(false);
   const [adminLogin, setAdminLogin] = useState({ email: "", password: "" });
 
   async function refresh() {
@@ -63,10 +68,7 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    if (!isAdmin) {
-      setIsBooting(false);
-      return;
-    }
+    if (!isAdmin) return;
 
     let active = true;
 
@@ -77,7 +79,7 @@ export default function AdminPage() {
         setProducts(productEntries);
         setOrders(orderEntries);
       } finally {
-        if (active) setIsBooting(false);
+        if (active) setHasLoadedAdminData(true);
       }
     }
 
@@ -97,7 +99,7 @@ export default function AdminPage() {
     [orders, products.length]
   );
 
-  if (isLoading || isBooting) {
+  if (isLoading || (isAdmin && !hasLoadedAdminData)) {
     return <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-10">Loading admin...</div>;
   }
 
@@ -126,7 +128,7 @@ export default function AdminPage() {
                 event.preventDefault();
 
                 try {
-                  await signInAdmin(adminLogin.email, adminLogin.password);
+                  await loginAdmin(adminLogin);
                   pushToast({ title: "Admin signed in", tone: "success" });
                   router.refresh();
                 } catch (error) {
@@ -242,12 +244,15 @@ export default function AdminPage() {
                     title: form.title,
                     price: Number(form.price),
                     category: form.category,
+                    cardType: form.cardType,
                     description: form.description,
                     sizes: form.sizes.split(",").map((entry) => entry.trim()).filter(Boolean) as Product["sizes"],
                     colors: form.colors.split(",").map((entry) => entry.trim()).filter(Boolean),
+                    tags: form.tags.split(",").map((entry) => entry.trim()).filter(Boolean),
                     featured: form.featured,
                     isNewDrop: form.isNewDrop,
                     rating: Number(form.rating),
+                    sortPriority: Number(form.sortPriority),
                     images
                   });
                 } else {
@@ -255,12 +260,15 @@ export default function AdminPage() {
                     title: form.title,
                     price: Number(form.price),
                     category: form.category,
+                    cardType: form.cardType,
                     description: form.description,
                     sizes: form.sizes.split(",").map((entry) => entry.trim()).filter(Boolean) as Product["sizes"],
                     colors: form.colors.split(",").map((entry) => entry.trim()).filter(Boolean),
+                    tags: form.tags.split(",").map((entry) => entry.trim()).filter(Boolean),
                     featured: form.featured,
                     isNewDrop: form.isNewDrop,
                     rating: Number(form.rating),
+                    sortPriority: Number(form.sortPriority),
                     images: []
                   });
 
@@ -318,6 +326,21 @@ export default function AdminPage() {
                 ))}
               </select>
             </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <input
+                required
+                value={form.cardType}
+                onChange={(event) => setForm((current) => ({ ...current, cardType: event.target.value }))}
+                placeholder="Card type: standard, editorial..."
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <input
+                value={form.sortPriority}
+                onChange={(event) => setForm((current) => ({ ...current, sortPriority: event.target.value }))}
+                placeholder="Sort priority"
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+            </div>
             <textarea
               required
               rows={4}
@@ -340,6 +363,12 @@ export default function AdminPage() {
                 className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
               />
             </div>
+            <input
+              value={form.tags}
+              onChange={(event) => setForm((current) => ({ ...current, tags: event.target.value }))}
+              placeholder="Tags: capsule,summer,limited"
+              className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               <input
                 value={form.rating}
@@ -392,7 +421,9 @@ export default function AdminPage() {
                 <article key={product.id} className="rounded-[1.8rem] border border-black/5 bg-zinc-50 p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">{product.category}</p>
+                      <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
+                        {product.category} / {product.cardType}
+                      </p>
                       <h3 className="mt-2 text-xl text-black">{product.title}</h3>
                       <p className="mt-2 text-sm text-zinc-600">{formatCurrency(product.price)}</p>
                     </div>
@@ -406,12 +437,15 @@ export default function AdminPage() {
                             title: product.title,
                             price: String(product.price),
                             category: product.category,
+                            cardType: product.cardType,
                             description: product.description,
                             sizes: product.sizes.join(","),
                             colors: product.colors.join(","),
+                            tags: product.tags.join(","),
                             featured: Boolean(product.featured),
                             isNewDrop: Boolean(product.isNewDrop),
-                            rating: String(product.rating ?? 4.8)
+                            rating: String(product.rating ?? 4.8),
+                            sortPriority: String(product.sortPriority ?? 0)
                           });
                           setFiles([]);
                         }}

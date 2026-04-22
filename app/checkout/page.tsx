@@ -17,11 +17,13 @@ export default function CheckoutPage() {
   const { isAuthenticated, profile, user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
   const { pushToast } = useToast();
+  const profileName = profile ? `${profile.firstName} ${profile.lastName}`.trim() : "";
   const [form, setForm] = useState({
-    name: profile ? `${profile.firstName} ${profile.lastName}`.trim() : "",
-    phone: profile?.phone ?? "",
+    name: "",
+    phone: "",
     address: ""
   });
+  const [touched, setTouched] = useState({ name: false, phone: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -35,16 +37,6 @@ export default function CheckoutPage() {
       router.replace("/shop");
     }
   }, [isAuthenticated, isSuccess, items.length, router]);
-
-  useEffect(() => {
-    if (!profile) return;
-
-    setForm((current) => ({
-      ...current,
-      name: current.name || `${profile.firstName} ${profile.lastName}`.trim(),
-      phone: current.phone || profile.phone
-    }));
-  }, [profile]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
@@ -65,9 +57,9 @@ export default function CheckoutPage() {
 
                 try {
                   await createOrder({
-                    userId: user?.uid ?? profile?.id,
-                    customerName: form.name,
-                    phone: form.phone,
+                    userId: user?.id ?? profile?.id,
+                    customerName: touched.name ? form.name : profileName,
+                    phone: touched.phone ? form.phone : (profile?.phone ?? ""),
                     address: form.address,
                     items,
                     totalPrice: subtotal,
@@ -96,15 +88,21 @@ export default function CheckoutPage() {
             >
               <input
                 required
-                value={form.name}
-                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                value={touched.name ? form.name : profileName}
+                onChange={(event) => {
+                  setTouched((current) => ({ ...current, name: true }));
+                  setForm((current) => ({ ...current, name: event.target.value }));
+                }}
                 placeholder="Full name"
                 className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
               />
               <input
                 required
-                value={form.phone}
-                onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
+                value={touched.phone ? form.phone : (profile?.phone ?? "")}
+                onChange={(event) => {
+                  setTouched((current) => ({ ...current, phone: true }));
+                  setForm((current) => ({ ...current, phone: event.target.value }));
+                }}
                 placeholder="Phone number"
                 className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
               />

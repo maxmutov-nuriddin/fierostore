@@ -17,7 +17,8 @@ const initialFilters: ProductFilters = {
   colors: [],
   priceRange: [0, 200],
   sort: "newest",
-  category: "All"
+  category: "All",
+  cardType: "All"
 };
 
 export function ShopPageView() {
@@ -28,19 +29,16 @@ export function ShopPageView() {
     () => Array.from(new Set(products.map((product) => product.category))),
     [products]
   );
+  const cardTypes = useMemo(
+    () => Array.from(new Set(products.map((product) => product.cardType))).filter(Boolean),
+    [products]
+  );
   const [filters, setFilters] = useState<ProductFilters>({
     ...initialFilters,
     category: categoryFromQuery ?? "All"
   });
   const [visibleCount, setVisibleCount] = useState(8);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setFilters((current) => ({
-      ...current,
-      category: categoryFromQuery ?? "All"
-    }));
-  }, [categoryFromQuery]);
 
   useEffect(() => {
     let active = true;
@@ -70,6 +68,7 @@ export function ShopPageView() {
   const filteredProducts = useMemo(() => {
     const filtered = products
       .filter((product) => filters.category === "All" || product.category === filters.category)
+      .filter((product) => filters.cardType === "All" || product.cardType === filters.cardType)
       .filter(
         (product) =>
           (!filters.sizes.length || product.sizes.some((size) => filters.sizes.includes(size))) &&
@@ -131,7 +130,12 @@ export function ShopPageView() {
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr] lg:items-start">
-        <FilterSidebar availableColors={availableColors} filters={filters} onChange={setFilters} />
+        <FilterSidebar
+          availableColors={availableColors}
+          availableCardTypes={cardTypes}
+          filters={filters}
+          onChange={setFilters}
+        />
 
         <div>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -160,7 +164,7 @@ export function ShopPageView() {
                 <div className="rounded-[2.4rem] border border-dashed border-black/10 px-6 py-16 text-center">
                   <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">No products yet</p>
                   <p className="mt-4 text-base leading-7 text-zinc-600">
-                    Add products from the admin panel and they will appear here from Firestore.
+                    Add cards from the admin panel and they will appear here from the Node and Mongo backend.
                   </p>
                 </div>
               )}

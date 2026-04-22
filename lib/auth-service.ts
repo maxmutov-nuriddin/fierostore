@@ -1,92 +1,71 @@
-import {
-  browserLocalPersistence,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  setPersistence,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-  type User
-} from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { apiRequest, clearAuthToken, readAuthToken, storeAuthToken } from "@/lib/api-client";
+import type { AppUser, CustomerProfile } from "@/lib/types";
 
-import { auth, db, isAdminUser, isFirebaseConfigured } from "@/lib/firebase";
-import type { CustomerProfile } from "@/lib/types";
-
-const PROFILE_STORAGE_KEY = "fierostore.customer-profiles";
 const SESSION_STORAGE_KEY = "fierostore.auth-session";
 
-function normalizePhone(phone: string) {
-  return phone.replace(/[^\d]/g, "");
-}
+type SessionPayload = {
+  token: string;
+  user: AppUser;
+  profile: CustomerProfile;
+};
 
-export function phoneToEmail(phone: string) {
-  const normalized = normalizePhone(phone);
-  return `${normalized}@fierostore.app`;
-}
+type AuthStatePayload = {
+  user: AppUser | null;
+  profile: CustomerProfile | null;
+  isAdmin: boolean;
+};
 
-function nowIso() {
-  return new Date().toISOString();
-}
-
-function getLocalProfiles() {
-  if (typeof window === "undefined") return [];
-
-  const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
-  if (!raw) return [];
-
-  try {
-    return JSON.parse(raw) as Array<CustomerProfile & { password: string }>;
-  } catch {
-    return [];
-  }
-}
-
-function setLocalProfiles(profiles: Array<CustomerProfile & { password: string }>) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
-}
-
-function setLocalSession(profile: CustomerProfile | null) {
+function setLocalSession(session: SessionPayload | null) {
   if (typeof window === "undefined") return;
 
-  if (!profile) {
+  if (!session) {
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    clearAuthToken();
     return;
   }
 
-  window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(profile));
+  window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+  storeAuthToken(session.token);
 }
 
-export function readLocalSession() {
+function readStoredSession() {
   if (typeof window === "undefined") return null;
 
   const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw) as CustomerProfile;
+    return JSON.parse(raw) as SessionPayload;
   } catch {
     return null;
   }
 }
 
-export async function createCustomerProfile(profile: CustomerProfile) {
-  if (!isFirebaseConfigured || !db) {
-    return profile;
-  }
-
-  await setDoc(doc(db, "users", profile.id), profile, { merge: true });
-  return profile;
+function toAuthState(session: SessionPayload | null): AuthStatePayload {
+  return {
+    user: session?.user ?? null,
+    profile: session?.profile ?? null,
+    isAdmin: session?.user?.role === "admin"
+  };
 }
 
-export async function getCustomerProfile(userId: string) {
-  if (!isFirebaseConfigured || !db) return null;
+async function createSession(path: string, body: Record<string, unknown>) {
+  const session = await apiRequest<SessionPayload>(path, {
+    method: "POST",
+    body,
+    token: null
+  });
 
-  const snapshot = await getDoc(doc(db, "users", userId));
-  if (!snapshot.exists()) return null;
+  setLocalSession(session);
+  return session;
+}
 
-  return snapshot.data() as CustomerProfile;
+export function readLocalSession() {
+  return readStoredSession()?.profile ?? null;
+}
+
+export function readLocalAuthState() {
+  return toAuthState(readStoredSession());
 }
 
 export async function registerCustomer(input: {
@@ -95,129 +74,50 @@ export async function registerCustomer(input: {
   phone: string;
   password: string;
 }) {
-  const phone = normalizePhone(input.phone);
-  const email = phoneToEmail(phone);
-
-  if (!isFirebaseConfigured || !auth) {
-    const profiles = getLocalProfiles();
-    if (profiles.some((entry) => entry.phone === phone)) {
-      throw new Error("This phone number is already registered.");
-    }
-
-    const profile: CustomerProfile = {
-      id:
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `user-${Date.now()}`,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      phone,
-      email,
-      createdAt: nowIso()
-    };
-
-    setLocalProfiles([...profiles, { ...profile, password: input.password }]);
-    setLocalSession(profile);
-
-    return { user: null, profile };
-  }
-
-  await setPersistence(auth, browserLocalPersistence);
-  const credentials = await createUserWithEmailAndPassword(auth, email, input.password);
-  await updateProfile(credentials.user, {
-    displayName: `${input.firstName} ${input.lastName}`.trim()
-  });
-
-  const profile: CustomerProfile = {
-    id: credentials.user.uid,
-    firstName: input.firstName,
-    lastName: input.lastName,
-    phone,
-    email,
-    createdAt: nowIso()
-  };
-
-  await createCustomerProfile(profile);
-
-  return { user: credentials.user, profile };
+  return createSession("/auth/register", input);
 }
 
 export async function loginCustomer(input: { phone: string; password: string }) {
-  const phone = normalizePhone(input.phone);
-  const email = phoneToEmail(phone);
+  return createSession("/auth/login", input);
+}
 
-  if (!isFirebaseConfigured || !auth) {
-    const profile = getLocalProfiles().find((entry) => entry.phone === phone && entry.password === input.password);
-    if (!profile) {
-      throw new Error("Incorrect phone number or password.");
-    }
-
-    const sessionProfile: CustomerProfile = {
-      id: profile.id,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      phone: profile.phone,
-      email: profile.email,
-      createdAt: profile.createdAt
-    };
-
-    setLocalSession(sessionProfile);
-    return { user: null, profile: sessionProfile };
-  }
-
-  await setPersistence(auth, browserLocalPersistence);
-  const credentials = await signInWithEmailAndPassword(auth, email, input.password);
-  const profile =
-    (await getCustomerProfile(credentials.user.uid)) ??
-    ({
-      id: credentials.user.uid,
-      firstName: credentials.user.displayName?.split(" ")[0] ?? "Client",
-      lastName: credentials.user.displayName?.split(" ").slice(1).join(" ") ?? "",
-      phone,
-      email,
-      createdAt: nowIso()
-    } satisfies CustomerProfile);
-
-  await createCustomerProfile(profile);
-
-  return { user: credentials.user, profile };
+export async function loginAdmin(input: { email: string; password: string }) {
+  return createSession("/auth/admin/login", input);
 }
 
 export async function logoutCustomer() {
-  setLocalSession(null);
-
-  if (auth) {
-    await signOut(auth);
+  try {
+    if (readAuthToken()) {
+      await apiRequest("/auth/logout", { method: "POST" });
+    }
+  } finally {
+    setLocalSession(null);
   }
 }
 
-export function watchAuthState(callback: (payload: {
-  user: User | null;
-  profile: CustomerProfile | null;
-  isAdmin: boolean;
-}) => void) {
-  if (!isFirebaseConfigured || !auth) {
-    callback({ user: null, profile: readLocalSession(), isAdmin: false });
+export function watchAuthState(callback: (payload: AuthStatePayload) => void) {
+  const localSession = readStoredSession();
+  callback(toAuthState(localSession));
+
+  if (!localSession?.token) {
     return () => undefined;
   }
 
-  return onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      callback({ user: null, profile: null, isAdmin: false });
-      return;
-    }
+  let active = true;
 
-    const profile =
-      (await getCustomerProfile(user.uid)) ??
-      ({
-        id: user.uid,
-        firstName: user.displayName?.split(" ")[0] ?? "Client",
-        lastName: user.displayName?.split(" ").slice(1).join(" ") ?? "",
-        phone: user.email?.split("@")[0] ?? "",
-        email: user.email ?? "",
-        createdAt: nowIso()
-      } satisfies CustomerProfile);
+  void apiRequest<SessionPayload>("/auth/me")
+    .then((session) => {
+      if (!active) return;
+      setLocalSession(session);
+      callback(toAuthState(session));
+    })
+    .catch(() => {
+      if (!active) return;
+      setLocalSession(null);
+      callback(toAuthState(null));
+    });
 
-    callback({ user, profile, isAdmin: isAdminUser(user) });
-  });
+  return () => {
+    active = false;
+  };
 }

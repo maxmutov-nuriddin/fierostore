@@ -1,19 +1,19 @@
 "use client";
 
 import { createContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { User } from "firebase/auth";
 
 import {
+  loginAdmin as loginAdminService,
   loginCustomer,
   logoutCustomer,
-  readLocalSession,
+  readLocalAuthState,
   registerCustomer,
   watchAuthState
 } from "@/lib/auth-service";
-import type { CustomerProfile } from "@/lib/types";
+import type { AppUser, CustomerProfile } from "@/lib/types";
 
 type AuthContextValue = {
-  user: User | null;
+  user: AppUser | null;
   profile: CustomerProfile | null;
   isAdmin: boolean;
   isAuthenticated: boolean;
@@ -25,15 +25,17 @@ type AuthContextValue = {
     password: string;
   }) => Promise<void>;
   login: (input: { phone: string; password: string }) => Promise<void>;
+  loginAdmin: (input: { email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<CustomerProfile | null>(readLocalSession());
-  const [isAdmin, setIsAdmin] = useState(false);
+  const initialState = readLocalAuthState();
+  const [user, setUser] = useState<AppUser | null>(initialState.user);
+  const [profile, setProfile] = useState<CustomerProfile | null>(initialState.profile);
+  const [isAdmin, setIsAdmin] = useState(initialState.isAdmin);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -64,7 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const result = await loginCustomer(input);
         setUser(result.user);
         setProfile(result.profile);
-        setIsAdmin(false);
+        setIsAdmin(result.user.role === "admin");
+      },
+      async loginAdmin(input) {
+        const result = await loginAdminService(input);
+        setUser(result.user);
+        setProfile(result.profile);
+        setIsAdmin(result.user.role === "admin");
       },
       async logout() {
         await logoutCustomer();

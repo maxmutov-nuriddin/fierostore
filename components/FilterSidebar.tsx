@@ -10,10 +10,12 @@ const sizes: ProductSize[] = ["S", "M", "L", "XL"];
 
 export function FilterSidebar({
   availableColors,
+  availableCardTypes,
   filters,
   onChange
 }: {
   availableColors: string[];
+  availableCardTypes: string[];
   filters: ProductFilters;
   onChange: (next: ProductFilters) => void;
 }) {
@@ -51,6 +53,29 @@ export function FilterSidebar({
                   )}
                 >
                   {size}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section>
+          <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Card type</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {["All", ...availableCardTypes].map((cardType) => {
+              const active = filters.cardType === cardType;
+
+              return (
+                <button
+                  key={cardType}
+                  type="button"
+                  onClick={() => update({ cardType })}
+                  className={cn(
+                    "rounded-full border px-4 py-2 text-xs uppercase tracking-[0.25em] transition",
+                    active ? "border-black bg-black text-white" : "border-black/10 text-zinc-600 hover:border-black/20"
+                  )}
+                >
+                  {cardType}
                 </button>
               );
             })}
@@ -166,7 +191,8 @@ export function FilterSidebar({
             colors: [],
             priceRange: [0, 200],
             sort: "newest",
-            category: "All"
+            category: "All",
+            cardType: "All"
           })
         }
       >
