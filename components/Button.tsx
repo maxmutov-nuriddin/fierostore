@@ -5,7 +5,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost" | "light";
+  variant?: "primary" | "secondary" | "ghost" | "light" | "invert";
   fullWidth?: boolean;
   iconLeft?: ReactNode;
 };
@@ -26,6 +26,7 @@ export function Button({
         variant === "secondary" && "border border-black/10 bg-white text-black hover:border-black/20 hover:bg-zinc-100",
         variant === "ghost" && "bg-transparent text-black hover:bg-black/5",
         variant === "light" && "bg-white text-black hover:bg-zinc-200",
+        variant === "invert" && "bg-white text-black hover:bg-zinc-800 hover:text-white",
         fullWidth && "w-full",
         className
       )}

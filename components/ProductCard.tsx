@@ -81,6 +81,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="absolute inset-x-4 bottom-4 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
           <Button
             fullWidth
+            variant="invert"
             iconLeft={<ShoppingBag size={16} />}
             onClick={() => {
               addItem(product);
@@ -90,7 +91,6 @@ export function ProductCard({ product }: { product: Product }) {
                 tone: "success"
               });
             }}
-            className="bg-white text-black hover:bg-zinc-200"
           >
             Quick add
           </Button>
