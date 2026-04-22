@@ -13,6 +13,7 @@ import { ReviewList } from "@/components/ReviewList";
 import { SectionHeading } from "@/components/SectionHeading";
 import { SkeletonBlock } from "@/components/SkeletonBlock";
 import { StickyAddToCartBar } from "@/components/StickyAddToCartBar";
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/useToast";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -31,6 +32,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
   const [activeImage, setActiveImage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { isAuthenticated } = useAuth();
   const { addItem } = useCart();
   const { pushToast } = useToast();
   const { toggle, isSaved } = useWishlist();
@@ -210,6 +212,16 @@ export function ProductDetailPage({ productId }: { productId: string }) {
               fullWidth
               variant="secondary"
               onClick={() => {
+                if (!isAuthenticated) {
+                  pushToast({
+                    title: "Login required",
+                    description: "Sign in before placing an order.",
+                    tone: "info"
+                  });
+                  router.push("/account");
+                  return;
+                }
+
                 handleAdd();
                 router.push("/checkout");
               }}
@@ -220,6 +232,16 @@ export function ProductDetailPage({ productId }: { productId: string }) {
               variant="ghost"
               className={`border ${saved ? "border-black bg-black text-white hover:bg-zinc-800" : "border-black/10"}`}
               onClick={() => {
+                if (!isAuthenticated) {
+                  pushToast({
+                    title: "Login required",
+                    description: "Create an account to save products to wishlist.",
+                    tone: "info"
+                  });
+                  router.push("/account");
+                  return;
+                }
+
                 toggle(product.id);
                 pushToast({
                   title: saved ? "Removed from wishlist" : "Saved to wishlist",

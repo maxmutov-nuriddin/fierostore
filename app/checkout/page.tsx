@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 
 import { Button } from "@/components/Button";
 import { SectionHeading } from "@/components/SectionHeading";
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/useToast";
 import { createOrder } from "@/lib/order-service";
@@ -13,17 +14,37 @@ import { formatCurrency } from "@/lib/utils";
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { isAuthenticated, profile, user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
   const { pushToast } = useToast();
-  const [form, setForm] = useState({ name: "", phone: "", address: "" });
+  const [form, setForm] = useState({
+    name: profile ? `${profile.firstName} ${profile.lastName}`.trim() : "",
+    phone: profile?.phone ?? "",
+    address: ""
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/account");
+      return;
+    }
+
     if (!items.length && !isSuccess) {
       router.replace("/shop");
     }
-  }, [isSuccess, items.length, router]);
+  }, [isAuthenticated, isSuccess, items.length, router]);
+
+  useEffect(() => {
+    if (!profile) return;
+
+    setForm((current) => ({
+      ...current,
+      name: current.name || `${profile.firstName} ${profile.lastName}`.trim(),
+      phone: current.phone || profile.phone
+    }));
+  }, [profile]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
@@ -44,11 +65,13 @@ export default function CheckoutPage() {
 
                 try {
                   await createOrder({
+                    userId: user?.uid ?? profile?.id,
                     customerName: form.name,
                     phone: form.phone,
                     address: form.address,
                     items,
-                    totalPrice: subtotal
+                    totalPrice: subtotal,
+                    status: "new"
                   });
 
                   clearCart();

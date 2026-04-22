@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { Heart, ShoppingBag, Star } from "lucide-react";
 
 import { Button } from "@/components/Button";
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/useToast";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -14,7 +16,9 @@ import type { Product } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 
 export function ProductCard({ product }: { product: Product }) {
+  const router = useRouter();
   const [hovered, setHovered] = useState(false);
+  const { isAuthenticated } = useAuth();
   const { addItem } = useCart();
   const { toggle, isSaved } = useWishlist();
   const { pushToast } = useToast();
@@ -48,6 +52,16 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           onClick={() => {
+            if (!isAuthenticated) {
+              pushToast({
+                title: "Login required",
+                description: "Create an account to save products to wishlist.",
+                tone: "info"
+              });
+              router.push("/account");
+              return;
+            }
+
             toggle(product.id);
             pushToast({
               title: saved ? "Removed from wishlist" : "Saved to wishlist",

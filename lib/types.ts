@@ -29,11 +29,13 @@ export type CartLine = {
 
 export type Order = {
   id: string;
+  userId?: string;
   customerName: string;
   phone: string;
   address: string;
   items: CartLine[];
   totalPrice: number;
+  status?: "new" | "confirmed" | "shipped" | "delivered";
   createdAt: string;
 };
 
@@ -61,4 +63,13 @@ export type ToastItem = {
   title: string;
   description?: string;
   tone: ToastTone;
+};
+
+export type CustomerProfile = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  createdAt: string;
 };

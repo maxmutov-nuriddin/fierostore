@@ -1,0 +1,504 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { Button } from "@/components/Button";
+import { SectionHeading } from "@/components/SectionHeading";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
+import { signInAdmin } from "@/lib/firebase";
+import {
+  createProduct,
+  deleteProduct,
+  getProducts,
+  updateProduct,
+  uploadProductImages
+} from "@/lib/product-service";
+import { getOrders, updateOrderStatus } from "@/lib/order-service";
+import type { Order, Product } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
+
+type ProductForm = {
+  title: string;
+  price: string;
+  category: Product["category"];
+  description: string;
+  sizes: string;
+  colors: string;
+  featured: boolean;
+  isNewDrop: boolean;
+  rating: string;
+};
+
+const initialForm: ProductForm = {
+  title: "",
+  price: "",
+  category: "T-shirts",
+  description: "",
+  sizes: "S,M,L,XL",
+  colors: "#111111,#e7e5e4",
+  featured: false,
+  isNewDrop: true,
+  rating: "4.8"
+};
+
+export default function AdminPage() {
+  const router = useRouter();
+  const { isAdmin, isAuthenticated, isLoading, logout } = useAuth();
+  const { pushToast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [form, setForm] = useState<ProductForm>(initialForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isBooting, setIsBooting] = useState(true);
+  const [adminLogin, setAdminLogin] = useState({ email: "", password: "" });
+
+  async function refresh() {
+    const [productEntries, orderEntries] = await Promise.all([getProducts(), getOrders()]);
+    setProducts(productEntries);
+    setOrders(orderEntries);
+  }
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setIsBooting(false);
+      return;
+    }
+
+    let active = true;
+
+    async function load() {
+      try {
+        const [productEntries, orderEntries] = await Promise.all([getProducts(), getOrders()]);
+        if (!active) return;
+        setProducts(productEntries);
+        setOrders(orderEntries);
+      } finally {
+        if (active) setIsBooting(false);
+      }
+    }
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, [isAdmin]);
+
+  const stats = useMemo(
+    () => ({
+      productCount: products.length,
+      orderCount: orders.length,
+      revenue: orders.reduce((sum, order) => sum + order.totalPrice, 0)
+    }),
+    [orders, products.length]
+  );
+
+  if (isLoading || isBooting) {
+    return <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-10">Loading admin...</div>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+          <section className="rounded-[2.6rem] border border-black/5 bg-black px-6 py-10 text-white">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/55">Admin panel</p>
+            <h1 className="mt-4 font-serif text-5xl sm:text-6xl">Manage products, orders, and the storefront.</h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/72">
+              Only admins can upload product cards, edit catalog data, and update order statuses.
+            </p>
+            {isAuthenticated ? (
+              <Button variant="secondary" className="mt-8 border-white/20 bg-white/10 text-white hover:bg-white/15" onClick={async () => logout()}>
+                Logout current user
+              </Button>
+            ) : null}
+          </section>
+
+          <section className="rounded-[2.6rem] border border-black/5 bg-white/85 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.06)]">
+            <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Admin login</p>
+            <form
+              className="mt-6 space-y-4"
+              onSubmit={async (event) => {
+                event.preventDefault();
+
+                try {
+                  await signInAdmin(adminLogin.email, adminLogin.password);
+                  pushToast({ title: "Admin signed in", tone: "success" });
+                  router.refresh();
+                } catch (error) {
+                  pushToast({
+                    title: "Admin login failed",
+                    description: error instanceof Error ? error.message : "Please check email and password.",
+                    tone: "error"
+                  });
+                }
+              }}
+            >
+              <input
+                required
+                value={adminLogin.email}
+                onChange={(event) => setAdminLogin((current) => ({ ...current, email: event.target.value }))}
+                placeholder="Admin email"
+                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <input
+                required
+                type="password"
+                value={adminLogin.password}
+                onChange={(event) => setAdminLogin((current) => ({ ...current, password: event.target.value }))}
+                placeholder="Password"
+                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <Button type="submit" fullWidth>
+                Enter admin
+              </Button>
+            </form>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <SectionHeading
+          eyebrow="Admin"
+          title="Premium control room for catalog and orders."
+          description="Upload product cards, update merchandising, and process incoming orders from one protected dashboard."
+        />
+        <Button
+          variant="ghost"
+          className="border border-black/10"
+          onClick={async () => {
+            await logout();
+            router.push("/");
+          }}
+        >
+          Logout
+        </Button>
+      </div>
+
+      <section className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-[2rem] border border-black/5 bg-white/80 p-5">
+          <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Products</p>
+          <p className="mt-3 text-3xl text-black">{stats.productCount}</p>
+        </div>
+        <div className="rounded-[2rem] border border-black/5 bg-white/80 p-5">
+          <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Orders</p>
+          <p className="mt-3 text-3xl text-black">{stats.orderCount}</p>
+        </div>
+        <div className="rounded-[2rem] border border-black/5 bg-white/80 p-5">
+          <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Revenue</p>
+          <p className="mt-3 text-3xl text-black">{formatCurrency(stats.revenue)}</p>
+        </div>
+      </section>
+
+      <div className="mt-8 grid gap-8 xl:grid-cols-[420px_1fr]">
+        <section className="rounded-[2.4rem] border border-black/5 bg-white/85 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.06)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
+                {editingId ? "Edit product" : "Add product"}
+              </p>
+              <p className="mt-2 text-2xl text-black">{editingId ? "Update existing card" : "Create new card"}</p>
+            </div>
+            {editingId ? (
+              <Button
+                variant="ghost"
+                className="border border-black/10"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm(initialForm);
+                  setFiles([]);
+                }}
+              >
+                Cancel
+              </Button>
+            ) : null}
+          </div>
+
+          <form
+            className="mt-6 space-y-4"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setIsSaving(true);
+
+              try {
+                let images: string[] = [];
+
+                if (editingId) {
+                  const existing = products.find((product) => product.id === editingId);
+                  images = existing?.images ?? [];
+                  if (files.length) {
+                    images = await uploadProductImages(files, editingId);
+                  }
+
+                  await updateProduct(editingId, {
+                    title: form.title,
+                    price: Number(form.price),
+                    category: form.category,
+                    description: form.description,
+                    sizes: form.sizes.split(",").map((entry) => entry.trim()).filter(Boolean) as Product["sizes"],
+                    colors: form.colors.split(",").map((entry) => entry.trim()).filter(Boolean),
+                    featured: form.featured,
+                    isNewDrop: form.isNewDrop,
+                    rating: Number(form.rating),
+                    images
+                  });
+                } else {
+                  const created = await createProduct({
+                    title: form.title,
+                    price: Number(form.price),
+                    category: form.category,
+                    description: form.description,
+                    sizes: form.sizes.split(",").map((entry) => entry.trim()).filter(Boolean) as Product["sizes"],
+                    colors: form.colors.split(",").map((entry) => entry.trim()).filter(Boolean),
+                    featured: form.featured,
+                    isNewDrop: form.isNewDrop,
+                    rating: Number(form.rating),
+                    images: []
+                  });
+
+                  images = files.length ? await uploadProductImages(files, created.id) : [];
+                  if (images.length) {
+                    await updateProduct(created.id, { images });
+                  }
+                }
+
+                await refresh();
+                setEditingId(null);
+                setForm(initialForm);
+                setFiles([]);
+                pushToast({ title: "Product saved", tone: "success" });
+              } catch (error) {
+                pushToast({
+                  title: "Could not save product",
+                  description: error instanceof Error ? error.message : "Please try again.",
+                  tone: "error"
+                });
+              } finally {
+                setIsSaving(false);
+              }
+            }}
+          >
+            <input
+              required
+              value={form.title}
+              onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+              placeholder="Product title"
+              className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <input
+                required
+                type="number"
+                min="0"
+                step="1"
+                value={form.price}
+                onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))}
+                placeholder="Price"
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <select
+                value={form.category}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, category: event.target.value as Product["category"] }))
+                }
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              >
+                {["T-shirts", "Sets", "Pants", "Jackets"].map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <textarea
+              required
+              rows={4}
+              value={form.description}
+              onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
+              placeholder="Description"
+              className="w-full rounded-[1.8rem] border border-black/10 bg-white px-5 py-4 text-sm outline-none transition focus:border-black/25"
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <input
+                value={form.sizes}
+                onChange={(event) => setForm((current) => ({ ...current, sizes: event.target.value }))}
+                placeholder="Sizes: S,M,L,XL"
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <input
+                value={form.colors}
+                onChange={(event) => setForm((current) => ({ ...current, colors: event.target.value }))}
+                placeholder="Colors: #111111,#e7e5e4"
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <input
+                value={form.rating}
+                onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))}
+                placeholder="Rating"
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <input
+                multiple
+                type="file"
+                accept="image/*"
+                onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
+                className="min-h-13 rounded-full border border-black/10 bg-white px-5 py-3 text-sm outline-none transition focus:border-black/25"
+              />
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <label className="inline-flex items-center gap-3 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  checked={form.featured}
+                  onChange={(event) => setForm((current) => ({ ...current, featured: event.target.checked }))}
+                />
+                Featured
+              </label>
+              <label className="inline-flex items-center gap-3 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  checked={form.isNewDrop}
+                  onChange={(event) => setForm((current) => ({ ...current, isNewDrop: event.target.checked }))}
+                />
+                New drop
+              </label>
+            </div>
+            <Button type="submit" fullWidth disabled={isSaving}>
+              {isSaving ? "Saving..." : editingId ? "Update product" : "Create product"}
+            </Button>
+          </form>
+        </section>
+
+        <div className="space-y-8">
+          <section className="rounded-[2.4rem] border border-black/5 bg-white/85 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Catalog</p>
+                <p className="mt-2 text-2xl text-black">Manage product cards</p>
+              </div>
+            </div>
+            <div className="mt-6 space-y-4">
+              {products.map((product) => (
+                <article key={product.id} className="rounded-[1.8rem] border border-black/5 bg-zinc-50 p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">{product.category}</p>
+                      <h3 className="mt-2 text-xl text-black">{product.title}</h3>
+                      <p className="mt-2 text-sm text-zinc-600">{formatCurrency(product.price)}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="ghost"
+                        className="border border-black/10"
+                        onClick={() => {
+                          setEditingId(product.id);
+                          setForm({
+                            title: product.title,
+                            price: String(product.price),
+                            category: product.category,
+                            description: product.description,
+                            sizes: product.sizes.join(","),
+                            colors: product.colors.join(","),
+                            featured: Boolean(product.featured),
+                            isNewDrop: Boolean(product.isNewDrop),
+                            rating: String(product.rating ?? 4.8)
+                          });
+                          setFiles([]);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="border border-rose-200 text-rose-600 hover:bg-rose-50"
+                        onClick={async () => {
+                          try {
+                            await deleteProduct(product.id);
+                            await refresh();
+                            pushToast({ title: "Product deleted", tone: "info" });
+                          } catch (error) {
+                            pushToast({
+                              title: "Delete failed",
+                              description: error instanceof Error ? error.message : "Please try again.",
+                              tone: "error"
+                            });
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[2.4rem] border border-black/5 bg-white/85 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.06)]">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Orders</p>
+              <p className="mt-2 text-2xl text-black">Track and update incoming orders</p>
+            </div>
+            <div className="mt-6 space-y-4">
+              {orders.map((order) => (
+                <article key={order.id} className="rounded-[1.8rem] border border-black/5 bg-zinc-50 p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">{order.customerName}</p>
+                      <p className="mt-2 text-lg text-black">{order.phone}</p>
+                      <p className="mt-2 max-w-lg text-sm leading-6 text-zinc-600">{order.address}</p>
+                      <p className="mt-3 text-sm text-zinc-600">
+                        {order.items.length} items / {formatCurrency(order.totalPrice)}
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <select
+                        value={order.status ?? "new"}
+                        onChange={async (event) => {
+                          try {
+                            await updateOrderStatus(
+                              order.id,
+                              event.target.value as NonNullable<Order["status"]>
+                            );
+                            await refresh();
+                            pushToast({ title: "Order updated", tone: "success" });
+                          } catch (error) {
+                            pushToast({
+                              title: "Could not update order",
+                              description: error instanceof Error ? error.message : "Please try again.",
+                              tone: "error"
+                            });
+                          }
+                        }}
+                        className="min-h-12 rounded-full border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-black/25"
+                      >
+                        {["new", "confirmed", "shipped", "delivered"].map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                        {new Date(order.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}

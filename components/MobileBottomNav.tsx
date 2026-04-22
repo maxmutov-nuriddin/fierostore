@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Shield, ShoppingBag } from "lucide-react";
+import { Home, Search, Shield, ShoppingBag, User2 } from "lucide-react";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
 
@@ -11,17 +12,20 @@ const items = [
   { href: "/", label: "Home", icon: Home },
   { href: "/shop", label: "Shop", icon: Search },
   { href: "/cart", label: "Cart", icon: ShoppingBag },
+  { href: "/account", label: "Account", icon: User2 },
   { href: "/admin", label: "Admin", icon: Shield }
 ];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { isAdmin } = useAuth();
   const { itemCount } = useCart();
+  const visibleItems = items.filter((item) => item.href !== "/admin" || isAdmin);
 
   return (
     <nav className="fixed inset-x-4 bottom-4 z-50 rounded-full border border-black/10 bg-white/95 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
-      <div className="grid grid-cols-4 gap-1">
-        {items.map((item) => {
+      <div className={`grid gap-1 ${visibleItems.length === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
+        {visibleItems.map((item) => {
           const Icon = item.icon;
 
           return (

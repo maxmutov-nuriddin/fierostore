@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, User2 } from "lucide-react";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ const navItems = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { isAuthenticated, profile, isAdmin } = useAuth();
   const { itemCount } = useCart();
   const { ids } = useWishlist();
 
@@ -28,6 +30,7 @@ export function Navbar() {
 
         <nav className="hidden items-center gap-8 md:flex">
           {navItems.map((item) => (
+            item.href === "/admin" && !isAdmin ? null : (
             <Link
               key={item.href}
               href={item.href}
@@ -38,18 +41,25 @@ export function Navbar() {
             >
               {item.label}
             </Link>
+            )
           ))}
         </nav>
 
         <div className="flex items-center gap-3">
           <Link
-            href="/shop"
+            href="/account"
             className="hidden rounded-full border border-black/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-zinc-600 transition hover:border-black/20 hover:text-black sm:inline-flex"
+          >
+            {isAuthenticated ? profile?.firstName || "Account" : "Login"}
+          </Link>
+          <Link
+            href="/shop"
+            className="hidden rounded-full border border-black/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-zinc-600 transition hover:border-black/20 hover:text-black lg:inline-flex"
           >
             New Drop
           </Link>
           <Link
-            href="/shop"
+            href={isAuthenticated ? "/shop" : "/account"}
             className="relative rounded-full border border-black/10 p-3 text-zinc-700 transition hover:border-black/20 hover:text-black"
             aria-label="Wishlist"
           >
@@ -71,6 +81,13 @@ export function Navbar() {
                 {itemCount}
               </span>
             ) : null}
+          </Link>
+          <Link
+            href="/account"
+            className="rounded-full border border-black/10 p-3 text-zinc-700 transition hover:border-black/20 hover:text-black sm:hidden"
+            aria-label="Account"
+          >
+            <User2 size={18} />
           </Link>
         </div>
       </div>

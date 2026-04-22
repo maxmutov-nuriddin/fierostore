@@ -1,0 +1,260 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { Button } from "@/components/Button";
+import { SectionHeading } from "@/components/SectionHeading";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
+
+type Mode = "login" | "register";
+
+export default function AccountPage() {
+  const router = useRouter();
+  const { isAuthenticated, isAdmin, isLoading, login, logout, profile, register } = useAuth();
+  const { pushToast } = useToast();
+  const [mode, setMode] = useState<Mode>("register");
+  const [isPending, setIsPending] = useState(false);
+  const [registerForm, setRegisterForm] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    password: "",
+    confirmPassword: ""
+  });
+  const [loginForm, setLoginForm] = useState({
+    phone: "",
+    password: ""
+  });
+
+  const displayName = useMemo(() => {
+    if (!profile) return "";
+    return `${profile.firstName} ${profile.lastName}`.trim();
+  }, [profile]);
+
+  if (isAuthenticated && !isLoading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <section className="rounded-[2.6rem] border border-black/5 bg-black px-6 py-10 text-white sm:px-8 lg:px-10">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/60">Account</p>
+            <h1 className="mt-4 font-serif text-5xl sm:text-6xl">{displayName || "Signed in"}</h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/70">
+              You can save products, place orders, and return later without losing your shopping flow.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button variant="light" onClick={() => router.push("/shop")}>
+                Continue shopping
+              </Button>
+              <Button variant="secondary" className="border-white/20 bg-white/10 text-white hover:bg-white/15" onClick={() => router.push("/checkout")}>
+                Checkout
+              </Button>
+              {isAdmin ? (
+                <Button variant="secondary" className="border-white/20 bg-white/10 text-white hover:bg-white/15" onClick={() => router.push("/admin")}>
+                  Open admin
+                </Button>
+              ) : null}
+            </div>
+          </section>
+
+          <aside className="rounded-[2.6rem] border border-black/5 bg-white/85 p-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Profile details</p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[1.6rem] border border-black/5 bg-zinc-50 p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">First name</p>
+                <p className="mt-2 text-lg text-black">{profile?.firstName}</p>
+              </div>
+              <div className="rounded-[1.6rem] border border-black/5 bg-zinc-50 p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Last name</p>
+                <p className="mt-2 text-lg text-black">{profile?.lastName}</p>
+              </div>
+              <div className="rounded-[1.6rem] border border-black/5 bg-zinc-50 p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Phone</p>
+                <p className="mt-2 text-lg text-black">{profile?.phone}</p>
+              </div>
+              <div className="rounded-[1.6rem] border border-black/5 bg-zinc-50 p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Access</p>
+                <p className="mt-2 text-lg text-black">{isAdmin ? "Admin" : "Customer"}</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              className="mt-6 border border-black/10"
+              onClick={async () => {
+                await logout();
+                pushToast({ title: "Signed out", tone: "info" });
+              }}
+            >
+              Logout
+            </Button>
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
+      <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+        <section>
+          <SectionHeading
+            eyebrow="Account"
+            title="Register once, then like and order in seconds."
+            description="We keep the storefront open for browsing, but wishlist and checkout require an account."
+          />
+          <div className="mt-8 rounded-[2.4rem] border border-black/5 bg-black px-6 py-8 text-white">
+            <p className="text-xs uppercase tracking-[0.3em] text-white/55">Why account is required</p>
+            <div className="mt-5 space-y-4 text-sm leading-7 text-white/75">
+              <p>Wishlist is saved to your profile so you can come back later from any device.</p>
+              <p>Orders are linked to your account so the admin can manage requests and delivery clearly.</p>
+              <p>Login is done with phone number and password. Behind the scenes we map the phone to Firebase Auth safely.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2.6rem] border border-black/5 bg-white/85 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.06)]">
+          <div className="flex gap-2 rounded-full border border-black/10 p-1">
+            {(["register", "login"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                className={`flex-1 rounded-full px-4 py-3 text-xs uppercase tracking-[0.28em] transition ${
+                  mode === value ? "bg-black text-white" : "text-zinc-500"
+                }`}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+
+          {mode === "register" ? (
+            <form
+              className="mt-6 space-y-4"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                if (registerForm.password !== registerForm.confirmPassword) {
+                  pushToast({
+                    title: "Passwords do not match",
+                    description: "Repeat the same password in both fields.",
+                    tone: "error"
+                  });
+                  return;
+                }
+
+                setIsPending(true);
+                try {
+                  await register({
+                    firstName: registerForm.firstName,
+                    lastName: registerForm.lastName,
+                    phone: registerForm.phone,
+                    password: registerForm.password
+                  });
+                  pushToast({ title: "Account created", tone: "success" });
+                  router.push("/shop");
+                } catch (error) {
+                  pushToast({
+                    title: "Registration failed",
+                    description: error instanceof Error ? error.message : "Please try again.",
+                    tone: "error"
+                  });
+                } finally {
+                  setIsPending(false);
+                }
+              }}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input
+                  required
+                  value={registerForm.firstName}
+                  onChange={(event) => setRegisterForm((current) => ({ ...current, firstName: event.target.value }))}
+                  placeholder="First name"
+                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+                />
+                <input
+                  required
+                  value={registerForm.lastName}
+                  onChange={(event) => setRegisterForm((current) => ({ ...current, lastName: event.target.value }))}
+                  placeholder="Last name"
+                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+                />
+              </div>
+              <input
+                required
+                value={registerForm.phone}
+                onChange={(event) => setRegisterForm((current) => ({ ...current, phone: event.target.value }))}
+                placeholder="Phone number"
+                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input
+                  required
+                  type="password"
+                  value={registerForm.password}
+                  onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))}
+                  placeholder="Password"
+                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+                />
+                <input
+                  required
+                  type="password"
+                  value={registerForm.confirmPassword}
+                  onChange={(event) =>
+                    setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))
+                  }
+                  placeholder="Repeat password"
+                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+                />
+              </div>
+              <Button type="submit" fullWidth disabled={isPending}>
+                {isPending ? "Creating account..." : "Create account"}
+              </Button>
+            </form>
+          ) : (
+            <form
+              className="mt-6 space-y-4"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setIsPending(true);
+
+                try {
+                  await login(loginForm);
+                  pushToast({ title: "Signed in", tone: "success" });
+                  router.push("/shop");
+                } catch (error) {
+                  pushToast({
+                    title: "Login failed",
+                    description: error instanceof Error ? error.message : "Please try again.",
+                    tone: "error"
+                  });
+                } finally {
+                  setIsPending(false);
+                }
+              }}
+            >
+              <input
+                required
+                value={loginForm.phone}
+                onChange={(event) => setLoginForm((current) => ({ ...current, phone: event.target.value }))}
+                placeholder="Phone number"
+                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <input
+                required
+                type="password"
+                value={loginForm.password}
+                onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                placeholder="Password"
+                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
+              />
+              <Button type="submit" fullWidth disabled={isPending}>
+                {isPending ? "Signing in..." : "Login"}
+              </Button>
+            </form>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}

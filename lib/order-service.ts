@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, orderBy, query } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, orderBy, query, updateDoc } from "firebase/firestore";
 
 import { db, isFirebaseConfigured, shouldUseLocalFallback } from "@/lib/firebase";
 import { sampleOrders } from "@/lib/sample-data";
@@ -48,11 +48,13 @@ export async function getOrders() {
 }
 
 export async function createOrder(input: {
+  userId?: string;
   customerName: string;
   phone: string;
   address: string;
   items: CartLine[];
   totalPrice: number;
+  status?: Order["status"];
 }) {
   const order: Order = {
     id:
@@ -60,6 +62,7 @@ export async function createOrder(input: {
         ? crypto.randomUUID()
         : `order-${Date.now()}`,
     ...input,
+    status: input.status ?? "new",
     createdAt: new Date().toISOString()
   };
 
@@ -75,6 +78,28 @@ export async function createOrder(input: {
     if (shouldUseLocalFallback(error)) {
       setLocalOrders([order, ...getLocalOrders()]);
       return order;
+    }
+
+    throw error;
+  }
+}
+
+export async function updateOrderStatus(orderId: string, status: NonNullable<Order["status"]>) {
+  if (!isFirebaseConfigured || !db) {
+    const orders = getLocalOrders().map((order) => (order.id === orderId ? { ...order, status } : order));
+    setLocalOrders(orders);
+    return orders.find((order) => order.id === orderId) ?? null;
+  }
+
+  try {
+    await updateDoc(doc(db, "orders", orderId), { status });
+    const orders = await getOrders();
+    return orders.find((order) => order.id === orderId) ?? null;
+  } catch (error) {
+    if (shouldUseLocalFallback(error)) {
+      const orders = getLocalOrders().map((order) => (order.id === orderId ? { ...order, status } : order));
+      setLocalOrders(orders);
+      return orders.find((order) => order.id === orderId) ?? null;
     }
 
     throw error;
