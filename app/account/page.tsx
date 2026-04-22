@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +27,9 @@ export default function AccountPage() {
     phone: "",
     password: ""
   });
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const displayName = useMemo(() => {
     if (!profile) return "";
@@ -242,7 +246,7 @@ export default function AccountPage() {
                         onChange={(event) =>
                           setRegisterForm((current) => ({ ...current, firstName: event.target.value }))
                         }
-                        placeholder="Nuriddin"
+                        placeholder="Your firstName"
                         className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
                       />
                     </label>
@@ -256,7 +260,7 @@ export default function AccountPage() {
                         onChange={(event) =>
                           setRegisterForm((current) => ({ ...current, lastName: event.target.value }))
                         }
-                        placeholder="Maxmutov"
+                        placeholder="Your lastName"
                         className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
                       />
                     </label>
@@ -280,31 +284,51 @@ export default function AccountPage() {
                       <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                         Password
                       </span>
-                      <input
-                        required
-                        type="password"
-                        value={registerForm.password}
-                        onChange={(event) =>
-                          setRegisterForm((current) => ({ ...current, password: event.target.value }))
-                        }
-                        placeholder="Minimum 6 characters"
-                        className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
-                      />
+                      <div className="relative">
+                        <input
+                          required
+                          type={showRegisterPassword ? "text" : "password"}
+                          value={registerForm.password}
+                          onChange={(event) =>
+                            setRegisterForm((current) => ({ ...current, password: event.target.value }))
+                          }
+                          placeholder="Minimum 6 characters"
+                          className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 pr-14 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegisterPassword((value) => !value)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 transition hover:text-black"
+                          aria-label={showRegisterPassword ? "Hide password" : "Show password"}
+                        >
+                          {showRegisterPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                     </label>
                     <label className="block">
                       <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                         Repeat password
                       </span>
-                      <input
-                        required
-                        type="password"
-                        value={registerForm.confirmPassword}
-                        onChange={(event) =>
-                          setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))
-                        }
-                        placeholder="Repeat password"
-                        className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
-                      />
+                      <div className="relative">
+                        <input
+                          required
+                          type={showRegisterConfirmPassword ? "text" : "password"}
+                          value={registerForm.confirmPassword}
+                          onChange={(event) =>
+                            setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))
+                          }
+                          placeholder="Repeat password"
+                          className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 pr-14 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegisterConfirmPassword((value) => !value)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 transition hover:text-black"
+                          aria-label={showRegisterConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showRegisterConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                     </label>
                   </div>
 
@@ -350,14 +374,24 @@ export default function AccountPage() {
                     <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                       Password
                     </span>
-                    <input
-                      required
-                      type="password"
-                      value={loginForm.password}
-                      onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
-                      placeholder="Enter your password"
-                      className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
-                    />
+                    <div className="relative">
+                      <input
+                        required
+                        type={showLoginPassword ? "text" : "password"}
+                        value={loginForm.password}
+                        onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                        placeholder="Enter your password"
+                        className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 pr-14 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword((value) => !value)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 transition hover:text-black"
+                        aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                      >
+                        {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </label>
                   <Button type="submit" fullWidth className="min-h-14 rounded-[1.6rem]" disabled={isPending}>
                     {isPending ? "Signing in..." : "Login"}
