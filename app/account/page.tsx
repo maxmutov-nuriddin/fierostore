@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/Button";
-import { SectionHeading } from "@/components/SectionHeading";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 
@@ -96,163 +95,277 @@ export default function AccountPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
-      <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-        <section>
-          <SectionHeading
-            eyebrow="Account"
-            title="Register once, then like and order in seconds."
-            description="We keep the storefront open for browsing, but wishlist and checkout require an account."
-          />
-          <div className="mt-8 rounded-[2.4rem] border border-black/5 bg-black px-6 py-8 text-white">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/55">Why account is required</p>
-            <div className="mt-5 space-y-4 text-sm leading-7 text-white/75">
-              <p>Wishlist is saved to your profile so you can come back later from any device.</p>
-              <p>Orders are linked to your account so the admin can manage requests and delivery clearly.</p>
-              <p>Login is done with phone number and password. Behind the scenes we map the phone to Firebase Auth safely.</p>
+      <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+        <section className="lg:sticky lg:top-28">
+          <div className="relative overflow-hidden rounded-[2.8rem] border border-black/5 bg-[#111111] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.14)] sm:p-8">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_24%)]" />
+            <div className="pointer-events-none absolute -right-10 top-10 font-serif text-[8rem] leading-none text-white/4 sm:text-[11rem]">
+              FI
+            </div>
+
+            <div className="relative flex min-h-[620px] flex-col justify-between">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.42em] text-white/45">FIERO</p>
+                  <p className="mt-3 text-[11px] uppercase tracking-[0.3em] text-white/32">Private customer access</p>
+                </div>
+                <div className="rounded-full border border-white/10 px-4 py-2 text-[11px] uppercase tracking-[0.28em] text-white/50">
+                  Members
+                </div>
+              </div>
+
+              <div className="mt-12">
+                <p className="text-[11px] uppercase tracking-[0.34em] text-white/36">Account</p>
+                <h1 className="mt-6 max-w-xl font-serif text-5xl leading-[0.94] text-white sm:text-6xl xl:text-[4.4rem]">
+                  A quieter way
+                  <br />
+                  to save pieces
+                  <br />
+                  and check out faster.
+                </h1>
+                <p className="mt-7 max-w-lg text-base leading-8 text-white/62 sm:text-lg">
+                  Create one customer profile to keep favorites, place orders, and return without starting from zero.
+                </p>
+              </div>
+
+              <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-3">
+                {[
+                  ["01", "Wishlist", "Saved products stay attached to your profile."],
+                  ["02", "Orders", "Checkout details stay ready for faster repeat purchases."],
+                  ["03", "Access", "Phone and password unlock a cleaner buying flow."]
+                ].map(([index, title, copy]) => (
+                  <div
+                    key={title}
+                    className="rounded-[1.8rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:min-h-[220px] xl:min-h-0 2xl:min-h-[220px]"
+                  >
+                    <p className="text-[11px] uppercase tracking-[0.34em] text-white/30">{index}</p>
+                    <p className="mt-6 text-xs uppercase tracking-[0.28em] text-white/52">{title}</p>
+                    <p className="mt-3 max-w-[26ch] text-base leading-8 text-white/62 sm:max-w-none 2xl:max-w-[18ch]">
+                      {copy}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-10 border-t border-white/10 pt-6">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="font-serif text-4xl leading-none text-white sm:text-5xl">FIERO</p>
+                    <p className="mt-3 text-[11px] uppercase tracking-[0.34em] text-white/34">
+                      Fashion storefront membership
+                    </p>
+                  </div>
+                  <p className="max-w-[170px] text-right text-sm leading-6 text-white/42">
+                    Built for wishlist, faster checkout, and cleaner order handling.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-[2.6rem] border border-black/5 bg-white/85 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.06)]">
-          <div className="flex gap-2 rounded-full border border-black/10 p-1">
-            {(["register", "login"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setMode(value)}
-                className={`flex-1 rounded-full px-4 py-3 text-xs uppercase tracking-[0.28em] transition ${
-                  mode === value ? "bg-black text-white" : "text-zinc-500"
-                }`}
-              >
-                {value}
-              </button>
-            ))}
+        <section className="rounded-[2.8rem] border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,255,255,0.82))] p-3 shadow-[0_30px_90px_rgba(0,0,0,0.08)] sm:p-4">
+          <div className="rounded-[2.2rem] border border-black/5 bg-white/90 p-4 sm:p-6">
+            <div className="mx-auto max-w-2xl">
+              <div className="flex items-center justify-between gap-4 border-b border-black/5 pb-5">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Customer access</p>
+                  <h2 className="mt-2 font-serif text-3xl text-black sm:text-4xl">
+                    {mode === "register" ? "Create your account" : "Welcome back"}
+                  </h2>
+                </div>
+                <p className="hidden max-w-[180px] text-right text-sm leading-6 text-zinc-500 sm:block">
+                  Clean entry point for wishlist, checkout, and repeat orders.
+                </p>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-2 rounded-full border border-black/10 bg-zinc-50 p-1.5">
+                {(["register", "login"] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setMode(value)}
+                    className={`rounded-full px-4 py-3 text-xs uppercase tracking-[0.3em] transition ${
+                      mode === value
+                        ? "bg-black text-white shadow-[0_12px_30px_rgba(0,0,0,0.18)]"
+                        : "text-zinc-500 hover:text-black"
+                    }`}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+
+              {mode === "register" ? (
+                <form
+                  className="mt-8 space-y-5"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    if (registerForm.password !== registerForm.confirmPassword) {
+                      pushToast({
+                        title: "Passwords do not match",
+                        description: "Repeat the same password in both fields.",
+                        tone: "error"
+                      });
+                      return;
+                    }
+
+                    setIsPending(true);
+                    try {
+                      await register({
+                        firstName: registerForm.firstName,
+                        lastName: registerForm.lastName,
+                        phone: registerForm.phone,
+                        password: registerForm.password
+                      });
+                      pushToast({ title: "Account created", tone: "success" });
+                      router.push("/shop");
+                    } catch (error) {
+                      pushToast({
+                        title: "Registration failed",
+                        description: error instanceof Error ? error.message : "Please try again.",
+                        tone: "error"
+                      });
+                    } finally {
+                      setIsPending(false);
+                    }
+                  }}
+                >
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        First name
+                      </span>
+                      <input
+                        required
+                        value={registerForm.firstName}
+                        onChange={(event) =>
+                          setRegisterForm((current) => ({ ...current, firstName: event.target.value }))
+                        }
+                        placeholder="Nuriddin"
+                        className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        Last name
+                      </span>
+                      <input
+                        required
+                        value={registerForm.lastName}
+                        onChange={(event) =>
+                          setRegisterForm((current) => ({ ...current, lastName: event.target.value }))
+                        }
+                        placeholder="Maxmutov"
+                        className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block">
+                    <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                      Phone number
+                    </span>
+                    <input
+                      required
+                      value={registerForm.phone}
+                      onChange={(event) => setRegisterForm((current) => ({ ...current, phone: event.target.value }))}
+                      placeholder="+998 90 123 45 67"
+                      className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                    />
+                  </label>
+
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        Password
+                      </span>
+                      <input
+                        required
+                        type="password"
+                        value={registerForm.password}
+                        onChange={(event) =>
+                          setRegisterForm((current) => ({ ...current, password: event.target.value }))
+                        }
+                        placeholder="Minimum 6 characters"
+                        className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        Repeat password
+                      </span>
+                      <input
+                        required
+                        type="password"
+                        value={registerForm.confirmPassword}
+                        onChange={(event) =>
+                          setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))
+                        }
+                        placeholder="Repeat password"
+                        className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                      />
+                    </label>
+                  </div>
+
+                  <Button type="submit" fullWidth className="mt-2 min-h-14 rounded-[1.6rem]" disabled={isPending}>
+                    {isPending ? "Creating account..." : "Create account"}
+                  </Button>
+                </form>
+              ) : (
+                <form
+                  className="mt-8 max-w-xl space-y-5"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    setIsPending(true);
+
+                    try {
+                      await login(loginForm);
+                      pushToast({ title: "Signed in", tone: "success" });
+                      router.push("/shop");
+                    } catch (error) {
+                      pushToast({
+                        title: "Login failed",
+                        description: error instanceof Error ? error.message : "Please try again.",
+                        tone: "error"
+                      });
+                    } finally {
+                      setIsPending(false);
+                    }
+                  }}
+                >
+                  <label className="block">
+                    <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                      Phone number
+                    </span>
+                    <input
+                      required
+                      value={loginForm.phone}
+                      onChange={(event) => setLoginForm((current) => ({ ...current, phone: event.target.value }))}
+                      placeholder="+998 90 123 45 67"
+                      className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-3 block text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                      Password
+                    </span>
+                    <input
+                      required
+                      type="password"
+                      value={loginForm.password}
+                      onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                      placeholder="Enter your password"
+                      className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
+                    />
+                  </label>
+                  <Button type="submit" fullWidth className="min-h-14 rounded-[1.6rem]" disabled={isPending}>
+                    {isPending ? "Signing in..." : "Login"}
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
-
-          {mode === "register" ? (
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                if (registerForm.password !== registerForm.confirmPassword) {
-                  pushToast({
-                    title: "Passwords do not match",
-                    description: "Repeat the same password in both fields.",
-                    tone: "error"
-                  });
-                  return;
-                }
-
-                setIsPending(true);
-                try {
-                  await register({
-                    firstName: registerForm.firstName,
-                    lastName: registerForm.lastName,
-                    phone: registerForm.phone,
-                    password: registerForm.password
-                  });
-                  pushToast({ title: "Account created", tone: "success" });
-                  router.push("/shop");
-                } catch (error) {
-                  pushToast({
-                    title: "Registration failed",
-                    description: error instanceof Error ? error.message : "Please try again.",
-                    tone: "error"
-                  });
-                } finally {
-                  setIsPending(false);
-                }
-              }}
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <input
-                  required
-                  value={registerForm.firstName}
-                  onChange={(event) => setRegisterForm((current) => ({ ...current, firstName: event.target.value }))}
-                  placeholder="First name"
-                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
-                />
-                <input
-                  required
-                  value={registerForm.lastName}
-                  onChange={(event) => setRegisterForm((current) => ({ ...current, lastName: event.target.value }))}
-                  placeholder="Last name"
-                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
-                />
-              </div>
-              <input
-                required
-                value={registerForm.phone}
-                onChange={(event) => setRegisterForm((current) => ({ ...current, phone: event.target.value }))}
-                placeholder="Phone number"
-                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
-              />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <input
-                  required
-                  type="password"
-                  value={registerForm.password}
-                  onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))}
-                  placeholder="Password"
-                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
-                />
-                <input
-                  required
-                  type="password"
-                  value={registerForm.confirmPassword}
-                  onChange={(event) =>
-                    setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))
-                  }
-                  placeholder="Repeat password"
-                  className="min-h-13 rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
-                />
-              </div>
-              <Button type="submit" fullWidth disabled={isPending}>
-                {isPending ? "Creating account..." : "Create account"}
-              </Button>
-            </form>
-          ) : (
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                setIsPending(true);
-
-                try {
-                  await login(loginForm);
-                  pushToast({ title: "Signed in", tone: "success" });
-                  router.push("/shop");
-                } catch (error) {
-                  pushToast({
-                    title: "Login failed",
-                    description: error instanceof Error ? error.message : "Please try again.",
-                    tone: "error"
-                  });
-                } finally {
-                  setIsPending(false);
-                }
-              }}
-            >
-              <input
-                required
-                value={loginForm.phone}
-                onChange={(event) => setLoginForm((current) => ({ ...current, phone: event.target.value }))}
-                placeholder="Phone number"
-                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
-              />
-              <input
-                required
-                type="password"
-                value={loginForm.password}
-                onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
-                placeholder="Password"
-                className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
-              />
-              <Button type="submit" fullWidth disabled={isPending}>
-                {isPending ? "Signing in..." : "Login"}
-              </Button>
-            </form>
-          )}
         </section>
       </div>
     </div>
