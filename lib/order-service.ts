@@ -5,6 +5,10 @@ export async function getOrders() {
   return apiRequest<Order[]>("/orders");
 }
 
+export async function getMyOrders() {
+  return apiRequest<Order[]>("/orders/mine");
+}
+
 export async function createOrder(input: {
   userId?: string;
   customerName: string;

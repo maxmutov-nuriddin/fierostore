@@ -486,26 +486,96 @@ export default function AdminPage() {
               <p className="mt-2 text-2xl text-black">Track and update incoming orders</p>
             </div>
             <div className="mt-6 space-y-4">
-              {orders.map((order) => (
-                <article key={order.id} className="rounded-[1.8rem] border border-black/5 bg-zinc-50 p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">{order.customerName}</p>
-                      <p className="mt-2 text-lg text-black">{order.phone}</p>
-                      <p className="mt-2 max-w-lg text-sm leading-6 text-zinc-600">{order.address}</p>
-                      <p className="mt-3 text-sm text-zinc-600">
-                        {order.items.length} items / {formatCurrency(order.totalPrice)}
+              {orders.map((order) => {
+                const statusColors: Record<NonNullable<Order["status"]>, string> = {
+                  new: "bg-zinc-100 text-zinc-600",
+                  confirmed: "bg-blue-50 text-blue-700",
+                  shipped: "bg-amber-50 text-amber-700",
+                  delivered: "bg-green-50 text-green-700"
+                };
+                const statusLabels: Record<NonNullable<Order["status"]>, string> = {
+                  new: "New",
+                  confirmed: "Confirmed",
+                  shipped: "Shipped",
+                  delivered: "Delivered"
+                };
+                const status = order.status ?? "new";
+                const waPhone = order.phone.replace(/\D/g, "");
+
+                return (
+                  <article key={order.id} className="rounded-[1.8rem] border border-black/5 bg-zinc-50 p-5">
+                    {/* Header row */}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.24em] ${statusColors[status]}`}>
+                        {statusLabels[status]}
+                      </span>
+                      <p className="text-xs text-zinc-400">
+                        {new Date(order.createdAt).toLocaleString("en-US", {
+                          year: "numeric", month: "short", day: "numeric",
+                          hour: "2-digit", minute: "2-digit"
+                        })}
                       </p>
                     </div>
-                    <div className="space-y-3">
+
+                    {/* Customer info */}
+                    <div className="mt-4">
+                      <p className="text-[11px] uppercase tracking-[0.28em] text-zinc-400">Customer</p>
+                      <p className="mt-1.5 text-lg text-black">{order.customerName}</p>
+                      <p className="mt-1 text-sm text-zinc-500">{order.address}</p>
+                    </div>
+
+                    {/* Contact buttons */}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <a
+                        href={`tel:${order.phone}`}
+                        className="inline-flex min-h-10 items-center gap-2 rounded-full border border-black/10 bg-white px-4 text-xs uppercase tracking-[0.24em] text-black transition hover:bg-zinc-100"
+                      >
+                        📞 {order.phone}
+                      </a>
+                      {waPhone && (
+                        <a
+                          href={`https://wa.me/${waPhone}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 text-xs uppercase tracking-[0.24em] text-green-700 transition hover:bg-green-100"
+                        >
+                          WhatsApp
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Items list */}
+                    <div className="mt-4 rounded-[1.2rem] border border-black/5 bg-white p-4">
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-zinc-400">
+                        {order.items.length} {order.items.length === 1 ? "item" : "items"}
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {order.items.map((item, i) => (
+                          <div key={i} className="flex items-center justify-between text-sm">
+                            <span className="truncate text-zinc-700">
+                              {item.title}
+                              <span className="ml-1.5 text-zinc-400">
+                                · {item.size} · ×{item.quantity}
+                              </span>
+                            </span>
+                            <span className="ml-4 shrink-0 text-black">{formatCurrency(item.price * item.quantity)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex items-center justify-between border-t border-black/5 pt-3">
+                        <span className="text-xs uppercase tracking-[0.22em] text-zinc-400">Total</span>
+                        <span className="text-base text-black">{formatCurrency(order.totalPrice)}</span>
+                      </div>
+                    </div>
+
+                    {/* Status update */}
+                    <div className="mt-4">
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-zinc-400">Update status</p>
                       <select
-                        value={order.status ?? "new"}
+                        value={status}
                         onChange={async (event) => {
                           try {
-                            await updateOrderStatus(
-                              order.id,
-                              event.target.value as NonNullable<Order["status"]>
-                            );
+                            await updateOrderStatus(order.id, event.target.value as NonNullable<Order["status"]>);
                             await refresh();
                             pushToast({ title: "Order updated", tone: "success" });
                           } catch (error) {
@@ -516,21 +586,16 @@ export default function AdminPage() {
                             });
                           }
                         }}
-                        className="min-h-12 rounded-full border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-black/25"
+                        className="mt-2 min-h-11 rounded-full border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-black/25"
                       >
-                        {["new", "confirmed", "shipped", "delivered"].map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
+                        {["new", "confirmed", "shipped", "delivered"].map((s) => (
+                          <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                         ))}
                       </select>
-                      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                        {new Date(order.createdAt).toLocaleString()}
-                      </p>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           </section>
         </div>
