@@ -500,7 +500,7 @@ export default function AdminPage() {
                   delivered: "Delivered"
                 };
                 const status = order.status ?? "new";
-                const waPhone = order.phone.replace(/\D/g, "");
+                const tgPhone = order.phone.replace(/\D/g, "");
 
                 return (
                   <article key={order.id} className="rounded-[1.8rem] border border-black/5 bg-zinc-50 p-5">
@@ -532,14 +532,14 @@ export default function AdminPage() {
                       >
                         📞 {order.phone}
                       </a>
-                      {waPhone && (
+                      {tgPhone && (
                         <a
-                          href={`https://wa.me/${waPhone}`}
+                          href={`https://t.me/+${tgPhone}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 text-xs uppercase tracking-[0.24em] text-green-700 transition hover:bg-green-100"
+                          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 text-xs uppercase tracking-[0.24em] text-sky-700 transition hover:bg-sky-100"
                         >
-                          WhatsApp
+                          Telegram
                         </a>
                       )}
                     </div>
