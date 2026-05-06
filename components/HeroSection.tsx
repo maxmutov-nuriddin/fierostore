@@ -39,11 +39,6 @@ export function HeroSection() {
             <Link href="/shop">
               <Button variant="light">Shop the drop</Button>
             </Link>
-            <Link href="/admin">
-              <Button variant="secondary" className="border-white/20 bg-white/10 text-white hover:text-black hover:bg-white/15">
-                Open admin
-              </Button>
-            </Link>
           </div>
         </motion.div>
       </div>
