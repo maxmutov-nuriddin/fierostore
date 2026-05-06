@@ -1,13 +1,18 @@
+"use client";
+
 import { Star } from "lucide-react";
 
+import { useT } from "@/hooks/useT";
 import type { Review } from "@/lib/types";
 
 export function ReviewList({ reviews }: { reviews: Review[] }) {
+  const t = useT();
+
   if (!reviews.length) {
     return (
       <div className="rounded-[2rem] border border-dashed border-black/10 px-6 py-12 text-center">
-        <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">No reviews yet</p>
-        <p className="mt-3 text-zinc-600">Be the first to leave feedback on this piece.</p>
+        <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">{t.review.noReviews}</p>
+        <p className="mt-3 text-zinc-600">{t.review.noReviewsDesc}</p>
       </div>
     );
   }
@@ -20,8 +25,8 @@ export function ReviewList({ reviews }: { reviews: Review[] }) {
             <div>
               <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">{review.author}</p>
               <div className="mt-2 flex items-center gap-1 text-black">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Star key={`${review.id}-${index}`} size={14} className={index < review.rating ? "fill-current" : ""} />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={`${review.id}-${i}`} size={14} className={i < review.rating ? "fill-current" : ""} />
                 ))}
               </div>
             </div>

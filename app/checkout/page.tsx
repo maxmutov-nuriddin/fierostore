@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { SectionHeading } from "@/components/SectionHeading";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { useT } from "@/hooks/useT";
 import { useToast } from "@/hooks/useToast";
 import { createOrder } from "@/lib/order-service";
 import { formatCurrency } from "@/lib/utils";
@@ -17,27 +18,18 @@ export default function CheckoutPage() {
   const { isAuthenticated, profile, user } = useAuth();
   const { items, subtotal, clearCart, hasHydrated } = useCart();
   const { pushToast } = useToast();
+  const t = useT();
+
   const profileName = profile ? `${profile.firstName} ${profile.lastName}`.trim() : "";
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    address: ""
-  });
+  const [form, setForm] = useState({ name: "", phone: "", address: "" });
   const [touched, setTouched] = useState({ name: false, phone: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/account");
-      return;
-    }
-
+    if (!isAuthenticated) { router.replace("/account"); return; }
     if (!hasHydrated) return;
-
-    if (!items.length && !isSuccess) {
-      router.replace("/shop");
-    }
+    if (!items.length && !isSuccess) router.replace("/shop");
   }, [isAuthenticated, isSuccess, items.length, router, hasHydrated]);
 
   return (
@@ -45,9 +37,9 @@ export default function CheckoutPage() {
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <section>
           <SectionHeading
-            eyebrow="Checkout"
-            title="Finish the order in under twenty seconds."
-            description="Only the fields that matter: name, phone, address, and a clean confirmation state."
+            eyebrow={t.checkout.eyebrow}
+            title={t.checkout.title}
+            description={t.checkout.desc}
           />
 
           <div className="mt-8 rounded-[2.4rem] border border-black/5 bg-white/85 p-6">
@@ -56,7 +48,6 @@ export default function CheckoutPage() {
               onSubmit={async (event) => {
                 event.preventDefault();
                 setIsSubmitting(true);
-
                 try {
                   await createOrder({
                     userId: user?.id ?? profile?.id,
@@ -67,20 +58,14 @@ export default function CheckoutPage() {
                     totalPrice: subtotal,
                     status: "new"
                   });
-
                   clearCart();
                   setIsSuccess(true);
-                  pushToast({
-                    title: "Order placed successfully",
-                    description: "We will contact you soon to confirm delivery.",
-                    tone: "success"
-                  });
-
+                  pushToast({ title: t.checkout.orderPlaced, description: t.checkout.orderPlacedDesc, tone: "success" });
                   window.setTimeout(() => router.push("/"), 2200);
                 } catch (error) {
                   pushToast({
-                    title: "Checkout failed",
-                    description: error instanceof Error ? error.message : "Please try again.",
+                    title: t.checkout.checkoutFailed,
+                    description: error instanceof Error ? error.message : undefined,
                     tone: "error"
                   });
                 } finally {
@@ -91,34 +76,27 @@ export default function CheckoutPage() {
               <input
                 required
                 value={touched.name ? form.name : profileName}
-                onChange={(event) => {
-                  setTouched((current) => ({ ...current, name: true }));
-                  setForm((current) => ({ ...current, name: event.target.value }));
-                }}
-                placeholder="Full name"
+                onChange={(e) => { setTouched((c) => ({ ...c, name: true })); setForm((c) => ({ ...c, name: e.target.value })); }}
+                placeholder={t.checkout.namePlaceholder}
                 className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
               />
               <input
                 required
                 value={touched.phone ? form.phone : (profile?.phone ?? "")}
-                onChange={(event) => {
-                  setTouched((current) => ({ ...current, phone: true }));
-                  setForm((current) => ({ ...current, phone: event.target.value }));
-                }}
-                placeholder="Phone number"
+                onChange={(e) => { setTouched((c) => ({ ...c, phone: true })); setForm((c) => ({ ...c, phone: e.target.value })); }}
+                placeholder={t.checkout.phonePlaceholder}
                 className="min-h-13 w-full rounded-full border border-black/10 bg-white px-5 text-sm outline-none transition focus:border-black/25"
               />
               <textarea
                 required
                 rows={5}
                 value={form.address}
-                onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
-                placeholder="Delivery address"
+                onChange={(e) => setForm((c) => ({ ...c, address: e.target.value }))}
+                placeholder={t.checkout.addressPlaceholder}
                 className="w-full rounded-[1.8rem] border border-black/10 bg-white px-5 py-4 text-sm outline-none transition focus:border-black/25"
               />
-
               <Button type="submit" fullWidth disabled={isSubmitting || !items.length}>
-                {isSubmitting ? "Placing order..." : "Place order"}
+                {isSubmitting ? t.checkout.placingOrder : t.checkout.placeOrder}
               </Button>
             </form>
 
@@ -128,8 +106,8 @@ export default function CheckoutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-5 rounded-[1.8rem] bg-black px-5 py-4 text-white"
               >
-                <p className="text-xs uppercase tracking-[0.28em] text-white/60">Success</p>
-                <p className="mt-2 text-lg">Order created. Redirecting back to home.</p>
+                <p className="text-xs uppercase tracking-[0.28em] text-white/60">{t.checkout.successLabel}</p>
+                <p className="mt-2 text-lg">{t.checkout.successMessage}</p>
               </motion.div>
             ) : null}
           </div>
@@ -137,23 +115,22 @@ export default function CheckoutPage() {
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
           <div className="rounded-[2.4rem] border border-black/5 bg-black p-6 text-white shadow-[0_28px_80px_rgba(0,0,0,0.12)]">
-            <p className="text-xs uppercase tracking-[0.32em] text-white/60">Order summary</p>
+            <p className="text-xs uppercase tracking-[0.32em] text-white/60">{t.checkout.orderSummary}</p>
             <div className="mt-6 space-y-4">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
                   <div className="min-w-0">
                     <p className="truncate text-sm text-white">{item.title}</p>
                     <p className="mt-1 text-xs uppercase tracking-[0.18em] text-white/50">
-                      {item.size} / Qty {item.quantity}
+                      {item.size} / {t.checkout.qty} {item.quantity}
                     </p>
                   </div>
                   <p className="text-sm">{formatCurrency(item.price * item.quantity)}</p>
                 </div>
               ))}
             </div>
-
             <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5">
-              <span className="text-white/70">Total</span>
+              <span className="text-white/70">{t.checkout.total}</span>
               <span className="text-xl">{formatCurrency(subtotal)}</span>
             </div>
           </div>

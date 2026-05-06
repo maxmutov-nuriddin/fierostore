@@ -5,8 +5,11 @@ import Image from "next/image";
 import { motion } from "motion/react";
 
 import { Button } from "@/components/Button";
+import { useT } from "@/hooks/useT";
 
 export function HeroSection() {
+  const t = useT();
+
   return (
     <section className="relative isolate overflow-hidden rounded-[2.4rem] border border-black/5 bg-black text-white">
       <div className="absolute inset-0">
@@ -17,7 +20,7 @@ export function HeroSection() {
           priority
           className="object-cover opacity-55"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black/15" />
+        <div className="absolute inset-0 bg-linear-to-r from-black via-black/70 to-black/15" />
       </div>
 
       <div className="relative mx-auto flex min-h-[78svh] max-w-7xl flex-col justify-end px-5 py-10 sm:px-6 lg:px-10 lg:py-16">
@@ -27,17 +30,17 @@ export function HeroSection() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="max-w-3xl"
         >
-          <p className="text-xs uppercase tracking-[0.42em] text-white/65">New season uniform</p>
+          <p className="text-xs uppercase tracking-[0.42em] text-white/65">{t.hero.eyebrow}</p>
           <h1 className="mt-5 font-serif text-5xl leading-[0.92] sm:text-7xl lg:text-[7rem]">
-            Silent luxury made wearable.
+            {t.hero.title}
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-white/75 sm:text-lg">
-            Minimal silhouettes, clean layers, and a fast mobile checkout built to replace your Telegram store.
+            {t.hero.subtitle}
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/shop">
-              <Button variant="light">Shop the drop</Button>
+              <Button variant="light">{t.hero.cta}</Button>
             </Link>
           </div>
         </motion.div>

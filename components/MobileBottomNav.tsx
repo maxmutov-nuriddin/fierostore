@@ -6,20 +6,23 @@ import { Home, Search, Shield, ShoppingBag, User2 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
-
-const items = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/shop", label: "Shop", icon: Search },
-  { href: "/cart", label: "Cart", icon: ShoppingBag },
-  { href: "/account", label: "Account", icon: User2 },
-  { href: "/admin", label: "Admin", icon: Shield }
-];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { isAdmin } = useAuth();
   const { itemCount } = useCart();
+  const t = useT();
+
+  const items = [
+    { href: "/", label: t.nav.home, icon: Home },
+    { href: "/shop", label: t.nav.shop, icon: Search },
+    { href: "/cart", label: t.cart.eyebrow, icon: ShoppingBag },
+    { href: "/account", label: t.account.profileTab, icon: User2 },
+    { href: "/admin", label: t.nav.admin, icon: Shield }
+  ];
+
   const visibleItems = items.filter((item) => item.href !== "/admin" || isAdmin);
 
   return (
@@ -27,7 +30,6 @@ export function MobileBottomNav() {
       <div className={`grid gap-1 ${visibleItems.length === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
         {visibleItems.map((item) => {
           const Icon = item.icon;
-
           return (
             <Link
               key={item.href}

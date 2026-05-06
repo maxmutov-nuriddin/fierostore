@@ -6,13 +6,16 @@ import { Heart, ShoppingBag, User2 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { useT } from "@/hooks/useT";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useLanguage } from "@/context/LanguageContext";
+import type { Lang } from "@/lib/translations";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/shop", label: "Shop" },
-  { href: "/admin", label: "Admin" }
+const LANGS: { id: Lang; label: string }[] = [
+  { id: "uz", label: "UZ" },
+  { id: "ru", label: "RU" },
+  { id: "en", label: "EN" }
 ];
 
 export function Navbar() {
@@ -20,6 +23,14 @@ export function Navbar() {
   const { isAuthenticated, profile, isAdmin } = useAuth();
   const { itemCount } = useCart();
   const { ids } = useWishlist();
+  const { lang, setLang } = useLanguage();
+  const t = useT();
+
+  const navItems = [
+    { href: "/", label: t.nav.home },
+    { href: "/shop", label: t.nav.shop },
+    { href: "/admin", label: t.nav.admin }
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-[rgba(248,246,243,0.8)] backdrop-blur-xl">
@@ -29,34 +40,53 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => (
+          {navItems.map((item) =>
             item.href === "/admin" && !isAdmin ? null : (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "text-xs uppercase tracking-[0.3em] text-zinc-500 transition hover:text-black",
-                pathname === item.href && "text-black"
-              )}
-            >
-              {item.label}
-            </Link>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "text-xs uppercase tracking-[0.3em] text-zinc-500 transition hover:text-black",
+                  pathname === item.href && "text-black"
+                )}
+              >
+                {item.label}
+              </Link>
             )
-          ))}
+          )}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Language switcher */}
+          <div className="hidden items-center rounded-full border border-black/10 p-0.5 sm:flex">
+            {LANGS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setLang(id)}
+                className={cn(
+                  "rounded-full px-2.5 py-1.5 text-[10px] uppercase tracking-[0.2em] transition",
+                  lang === id
+                    ? "bg-black text-white"
+                    : "text-zinc-400 hover:text-zinc-700"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <Link
             href="/account"
             className="hidden rounded-full border border-black/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-zinc-600 transition hover:border-black/20 hover:text-black sm:inline-flex"
           >
-            {isAuthenticated ? profile?.firstName || "Account" : "Login"}
+            {isAuthenticated ? profile?.firstName || t.nav.login : t.nav.login}
           </Link>
           <Link
             href="/shop"
             className="hidden rounded-full border border-black/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-zinc-600 transition hover:border-black/20 hover:text-black lg:inline-flex"
           >
-            New Drop
+            {t.nav.newDrop}
           </Link>
           <Link
             href={isAuthenticated ? "/shop" : "/account"}

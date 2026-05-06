@@ -15,6 +15,7 @@ import { SkeletonBlock } from "@/components/SkeletonBlock";
 import { StickyAddToCartBar } from "@/components/StickyAddToCartBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { useT } from "@/hooks/useT";
 import { useToast } from "@/hooks/useToast";
 import { useWishlist } from "@/hooks/useWishlist";
 import { getProductById, getRelatedProducts } from "@/lib/product-service";
@@ -37,6 +38,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
   const { addItem } = useCart();
   const { pushToast } = useToast();
   const { toggle, isSaved } = useWishlist();
+  const t = useT();
 
   const loadReviews = async (currentId: string) => {
     try {
@@ -94,7 +96,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
 
     addItem(product, { size: selectedSize, color: selectedColor });
     pushToast({
-      title: "Added to cart",
+      title: t.product.addedToCart,
       description: `${product.title} in ${selectedSize}`,
       tone: "success"
     });
@@ -104,12 +106,12 @@ export function ProductDetailPage({ productId }: { productId: string }) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
         <div className="grid gap-8 lg:grid-cols-2">
-          <SkeletonBlock className="aspect-[4/5] w-full rounded-[2.4rem]" />
+          <SkeletonBlock className="aspect-4/5 w-full rounded-[2.4rem]" />
           <div className="space-y-4">
             <SkeletonBlock className="h-6 w-24" />
             <SkeletonBlock className="h-14 w-3/4" />
             <SkeletonBlock className="h-5 w-1/4" />
-            <SkeletonBlock className="h-24 w-full rounded-[2rem]" />
+            <SkeletonBlock className="h-24 w-full rounded-4xl" />
           </div>
         </div>
       </div>
@@ -120,14 +122,14 @@ export function ProductDetailPage({ productId }: { productId: string }) {
     return (
       <div className="mx-auto flex min-h-[60svh] max-w-3xl flex-col items-center justify-center px-4 text-center">
         <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-          {errorMessage ? "Connection issue" : "Missing product"}
+          {errorMessage ? t.product.connectionIssue : t.product.missingProduct}
         </p>
         <h1 className="mt-4 font-serif text-5xl text-black">
-          {errorMessage ? "Product data is temporarily unavailable." : "This piece is currently unavailable."}
+          {errorMessage ? t.product.connectionDesc : t.product.missingDesc}
         </h1>
         {errorMessage ? <p className="mt-4 max-w-xl text-base leading-7 text-zinc-600">{errorMessage}</p> : null}
         <Link href="/shop" className="mt-8">
-          <Button>Back to shop</Button>
+          <Button>{t.product.backToShop}</Button>
         </Link>
       </div>
     );
@@ -145,7 +147,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
                 key={image}
                 type="button"
                 onClick={() => setActiveImage(index)}
-                className={`relative aspect-[4/5] min-w-[82vw] overflow-hidden rounded-[2.2rem] sm:min-w-[46vw] lg:min-w-0 ${
+                className={`relative aspect-4/5 min-w-[82vw] overflow-hidden rounded-[2.2rem] sm:min-w-[46vw] lg:min-w-0 ${
                   activeImage === index ? "ring-2 ring-black/20" : ""
                 }`}
               >
@@ -169,14 +171,14 @@ export function ProductDetailPage({ productId }: { productId: string }) {
             <p className="text-lg uppercase tracking-[0.2em] text-black">{formatCurrency(product.price)}</p>
             <div className="flex items-center gap-2 text-sm text-zinc-500">
               <Star size={15} className="fill-current text-black" />
-              <span>{(reviewScore || product.rating || 4.8).toFixed(1)} rating</span>
+              <span>{(reviewScore || product.rating || 4.8).toFixed(1)} {t.product.rating}</span>
             </div>
           </div>
 
           <p className="mt-6 text-base leading-7 text-zinc-600">{product.description}</p>
 
           <div className="mt-8">
-            <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Size</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">{t.product.size}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {product.sizes.map((size) => (
                 <button
@@ -196,7 +198,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
           </div>
 
           <div className="mt-6">
-            <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Color</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">{t.product.color}</p>
             <div className="mt-3 flex flex-wrap gap-3">
               {product.colors.map((color) => (
                 <button
@@ -213,19 +215,19 @@ export function ProductDetailPage({ productId }: { productId: string }) {
             </div>
           </div>
 
-          <div className="mt-8 rounded-[2rem] border border-black/5 bg-white/80 p-5">
+          <div className="mt-8 rounded-4xl border border-black/5 bg-white/80 p-5">
             <div className="flex items-start gap-3">
               <Truck className="mt-0.5 text-zinc-500" size={18} />
               <div>
-                <p className="text-sm uppercase tracking-[0.24em] text-zinc-500">Delivery info</p>
-                <p className="mt-2 text-base text-zinc-700">Ships in 7-18 days with order tracking.</p>
+                <p className="text-sm uppercase tracking-[0.24em] text-zinc-500">{t.product.deliveryLabel}</p>
+                <p className="mt-2 text-base text-zinc-700">{t.product.deliveryInfo}</p>
               </div>
             </div>
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button fullWidth onClick={handleAdd}>
-              Add to cart
+              {t.product.addToCart}
             </Button>
             <Button
               fullWidth
@@ -233,8 +235,8 @@ export function ProductDetailPage({ productId }: { productId: string }) {
               onClick={() => {
                 if (!isAuthenticated) {
                   pushToast({
-                    title: "Login required",
-                    description: "Sign in before placing an order.",
+                    title: t.product.loginRequired,
+                    description: t.product.loginDesc,
                     tone: "info"
                   });
                   router.push("/account");
@@ -245,7 +247,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
                 router.push("/checkout");
               }}
             >
-              Buy now
+              {t.product.buyNow}
             </Button>
             <Button
               variant="ghost"
@@ -253,8 +255,8 @@ export function ProductDetailPage({ productId }: { productId: string }) {
               onClick={() => {
                 if (!isAuthenticated) {
                   pushToast({
-                    title: "Login required",
-                    description: "Create an account to save products to wishlist.",
+                    title: t.product.loginRequired,
+                    description: t.product.wishlistLoginDesc,
                     tone: "info"
                   });
                   router.push("/account");
@@ -263,7 +265,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
 
                 toggle(product.id);
                 pushToast({
-                  title: saved ? "Removed from wishlist" : "Saved to wishlist",
+                  title: saved ? t.product.wishlistRemoved : t.product.wishlistSaved,
                   description: product.title
                 });
               }}
@@ -277,9 +279,9 @@ export function ProductDetailPage({ productId }: { productId: string }) {
       <section className="mt-20 grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
           <SectionHeading
-            eyebrow="Reviews"
-            title="What customers say after delivery."
-            description="Minimal feedback system powered by the Node and Mongo review service."
+            eyebrow={t.product.reviewsEyebrow}
+            title={t.product.reviewsTitle}
+            description={t.product.reviewsDesc}
           />
         </div>
         <div className="space-y-5">
@@ -290,9 +292,9 @@ export function ProductDetailPage({ productId }: { productId: string }) {
 
       <section className="mt-20">
         <SectionHeading
-          eyebrow="You may also like"
-          title="More pieces from the same mood."
-          description="Related items keep the shopping path moving without breaking the premium aesthetic."
+          eyebrow={t.product.relatedEyebrow}
+          title={t.product.relatedTitle}
+          description={t.product.relatedDesc}
         />
         <div className="mt-8">
           <ProductGrid products={related} />
