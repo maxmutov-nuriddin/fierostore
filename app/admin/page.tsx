@@ -231,13 +231,13 @@ export default function AdminPage() {
               setIsSaving(true);
 
               try {
-                let images: string[] = [];
+                const parsedSizes = form.sizes.split(",").map((entry) => entry.trim()).filter(Boolean) as Product["sizes"];
+                const parsedColors = form.colors.split(",").map((entry) => entry.trim()).filter(Boolean);
+                const parsedTags = form.tags.split(",").map((entry) => entry.trim()).filter(Boolean);
 
                 if (editingId) {
-                  const existing = products.find((product) => product.id === editingId);
-                  images = existing?.images ?? [];
                   if (files.length) {
-                    images = await uploadProductImages(files, editingId);
+                    await uploadProductImages(files, editingId);
                   }
 
                   await updateProduct(editingId, {
@@ -246,14 +246,13 @@ export default function AdminPage() {
                     category: form.category,
                     cardType: form.cardType,
                     description: form.description,
-                    sizes: form.sizes.split(",").map((entry) => entry.trim()).filter(Boolean) as Product["sizes"],
-                    colors: form.colors.split(",").map((entry) => entry.trim()).filter(Boolean),
-                    tags: form.tags.split(",").map((entry) => entry.trim()).filter(Boolean),
+                    sizes: parsedSizes,
+                    colors: parsedColors,
+                    tags: parsedTags,
                     featured: form.featured,
                     isNewDrop: form.isNewDrop,
                     rating: Number(form.rating),
-                    sortPriority: Number(form.sortPriority),
-                    images
+                    sortPriority: Number(form.sortPriority)
                   });
                 } else {
                   const created = await createProduct({
@@ -262,9 +261,9 @@ export default function AdminPage() {
                     category: form.category,
                     cardType: form.cardType,
                     description: form.description,
-                    sizes: form.sizes.split(",").map((entry) => entry.trim()).filter(Boolean) as Product["sizes"],
-                    colors: form.colors.split(",").map((entry) => entry.trim()).filter(Boolean),
-                    tags: form.tags.split(",").map((entry) => entry.trim()).filter(Boolean),
+                    sizes: parsedSizes,
+                    colors: parsedColors,
+                    tags: parsedTags,
                     featured: form.featured,
                     isNewDrop: form.isNewDrop,
                     rating: Number(form.rating),
@@ -272,9 +271,8 @@ export default function AdminPage() {
                     images: []
                   });
 
-                  images = files.length ? await uploadProductImages(files, created.id) : [];
-                  if (images.length) {
-                    await updateProduct(created.id, { images });
+                  if (files.length) {
+                    await uploadProductImages(files, created.id);
                   }
                 }
 

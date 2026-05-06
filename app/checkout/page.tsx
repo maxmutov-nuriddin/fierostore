@@ -15,7 +15,7 @@ import { formatCurrency } from "@/lib/utils";
 export default function CheckoutPage() {
   const router = useRouter();
   const { isAuthenticated, profile, user } = useAuth();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, hasHydrated } = useCart();
   const { pushToast } = useToast();
   const profileName = profile ? `${profile.firstName} ${profile.lastName}`.trim() : "";
   const [form, setForm] = useState({
@@ -33,10 +33,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!hasHydrated) return;
+
     if (!items.length && !isSuccess) {
       router.replace("/shop");
     }
-  }, [isAuthenticated, isSuccess, items.length, router]);
+  }, [isAuthenticated, isSuccess, items.length, router, hasHydrated]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">

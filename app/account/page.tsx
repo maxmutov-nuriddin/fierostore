@@ -53,11 +53,6 @@ export default function AccountPage() {
               <Button variant="secondary" className="border-white/20 bg-white/10 text-white hover:bg-white/15" onClick={() => router.push("/checkout")}>
                 Checkout
               </Button>
-              {isAdmin ? (
-                <Button variant="secondary" className="border-white/20 bg-white/10 text-white hover:bg-white/15" onClick={() => router.push("/admin")}>
-                  Open admin
-                </Button>
-              ) : null}
             </div>
           </section>
 
@@ -246,7 +241,7 @@ export default function AccountPage() {
                         onChange={(event) =>
                           setRegisterForm((current) => ({ ...current, firstName: event.target.value }))
                         }
-                        placeholder="Your firstName"
+                        placeholder="First name"
                         className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
                       />
                     </label>
@@ -260,7 +255,7 @@ export default function AccountPage() {
                         onChange={(event) =>
                           setRegisterForm((current) => ({ ...current, lastName: event.target.value }))
                         }
-                        placeholder="Your lastName"
+                        placeholder="Last name"
                         className="min-h-14 w-full rounded-[1.6rem] border border-black/10 bg-zinc-50 px-5 text-base text-black outline-none transition focus:border-black/25 focus:bg-white"
                       />
                     </label>

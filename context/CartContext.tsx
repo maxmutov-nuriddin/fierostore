@@ -8,6 +8,7 @@ type CartContextValue = {
   items: CartLine[];
   itemCount: number;
   subtotal: number;
+  hasHydrated: boolean;
   addItem: (product: Product, options?: { size?: ProductSize; color?: string; quantity?: number }) => void;
   removeItem: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
@@ -58,6 +59,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items,
       itemCount,
       subtotal,
+      hasHydrated,
       addItem(product, options) {
         const size = options?.size ?? product.sizes[0];
         const color = options?.color ?? product.colors[0];
@@ -101,7 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems([]);
       }
     };
-  }, [items]);
+  }, [items, hasHydrated]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
