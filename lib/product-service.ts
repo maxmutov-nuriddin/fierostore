@@ -11,7 +11,7 @@ function normalizeProduct(data: Partial<Product> & { id?: string; _id?: string }
     sizes: data.sizes ?? ["M"],
     colors: data.colors ?? ["#111111"],
     description: data.description ?? "",
-    category: data.category ?? "T-shirts",
+    category: data.category ?? "Dresses",
     cardType: data.cardType ?? "standard",
     tags: data.tags ?? [],
     featured: data.featured ?? false,

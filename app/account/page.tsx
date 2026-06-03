@@ -78,7 +78,16 @@ export default function AccountPage() {
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button variant="light" onClick={() => router.push("/shop")}>
+              {isAdmin ? (
+                <Button variant="light" onClick={() => router.push("/admin")}>
+                  Admin panel
+                </Button>
+              ) : null}
+              <Button
+                variant={isAdmin ? "ghost" : "light"}
+                className={isAdmin ? "border border-white/15 text-white hover:bg-white/8" : undefined}
+                onClick={() => router.push("/shop")}
+              >
                 Shop
               </Button>
               <Button

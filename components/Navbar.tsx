@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart, ShoppingBag, User2 } from "lucide-react";
 
+import { FieroLogo } from "@/components/FieroLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useT } from "@/hooks/useT";
@@ -35,8 +36,8 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-[rgba(248,246,243,0.8)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-10">
-        <Link href="/" className="text-lg font-semibold uppercase tracking-[0.45em] text-black">
-          FIERO
+        <Link href="/" aria-label="Fiero — home">
+          <FieroLogo className="text-black" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
